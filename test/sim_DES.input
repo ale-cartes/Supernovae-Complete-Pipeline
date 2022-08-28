@@ -1,0 +1,66 @@
+
+
+SIMLIB_FILE:  $SNDATA_ROOT/simlib/DES/DES_10field_griz_B12.SIMLIB
+#HOSTLIB_FILE:  DES.HOSTLIB
+#HOSTLIB_GENRANGE_NSIGZ: -2. +5.
+SOLID_ANGLE: .00456     # 15 sq deg
+
+NGEN_LC:    100               # number of SN lightcurves to generate 
+GENVERSION: test_DES    # SNDATA version to generate
+GENSOURCE:  RANDOM   
+GENMODEL:   SALT2.JLA-B14
+
+GENMODEL_ERRSCALE:  2.0           # apply model errors with this scale
+GENFILTERS:  griz
+GENMAG_OFF_AB:  0.0 0.0 0.0 0.0 0.0
+
+# CLEARPROMPT: 0
+EXPOSURE_TIME:  1
+
+KCOR_FILE:   $SNDATA_ROOT/kcor/DES/20130322/kcor_DES.fits
+
+# selection criteria for generation
+GENRANGE_RA:      -360.   360.0   deg
+GENRANGE_DECL:    -360.   360.5
+GENRANGE_PEAKMJD:  56170.0  56350.0
+GENSIGMA_SEARCH_PEAKMJD:  1.0     # sigma-smearing for  SEARCH_PEAKMJD (days)
+
+GENRANGE_REDSHIFT:  0.04    1.2
+GENSIGMA_REDSHIFT:  0.0005
+DNDZ: POWERLAW 2.6E-5 1.5  
+
+GENRANGE_TREST:   -18.0  70.0     # rest epoch relative to peak (days)
+
+# ----------------
+GENMEAN_SALT2x1:     0.0
+GENRANGE_SALT2x1:   -5.0  +3.0     # x1 (stretch) range
+GENSIGMA_SALT2x1:    1.5   0.9     # bifurcated sigmas
+
+GENMEAN_SALT2c:     0.0
+GENRANGE_SALT2c:   -0.40   0.60     # color range
+GENSIGMA_SALT2c:    0.08   0.14     # bifurcated sigmas
+
+GENALPHA_SALT2:  0.11
+GENBETA_SALT2:   3.2
+# --------------------
+
+
+RANSEED: 12945       # random number seed
+
+# smear flags: 0=off, 1=on
+SMEARFLAG_FLUX:    1  # photo-stat smearing of signal, sky, etc ...
+SMEARFLAG_ZEROPT:  1  # smear zero-point with zptsig
+
+FORMAT_MASK:	32  # 2=ascii, 32=FITS
+
+
+APPLY_CUTWIN_OPT: 1
+CUTWIN_LAMREST:  3200 9500      # cut on lamobs/(1+z)
+CUTWIN_TRESTMIN: -18. 0.        # at least 1 epoch before peak
+CUTWIN_TRESTMAX: +10. +60.      # at least 1 epoch >10 days 
+CUTWIN_NEPOCH: 5 -5.              # require 5 epochs (no S/N requirement)
+CUTWIN_SNRMAX: 10 griz 1 -20. 80.  # require 1 of griz with S/N > 10
+CUTWIN_SNRMAX:  5 griz 3 -20. 80.  # require 3 of griz with S/N > 5
+CUTWIN_T0GAPMAX: 0 20.
+
+SIMGEN_DUMP: 7  CID Z S2c S2x1 TRESTMIN TRESTMAX MJD0

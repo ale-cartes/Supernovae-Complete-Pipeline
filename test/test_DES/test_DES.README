@@ -1,21 +1,21 @@
 DOCUMENTATION:
   OVERVIEW:
-    TIME_START:   2022-08-16  17:51  # UT
+    TIME_START:   2022-08-28  04:44  # UT
     SURVEY:       DES
     GENMODEL:     SALT2.JLA-B14
     SNIA:         True
     HOST_MACHINE: (null)
     USERNAME:     acartes
-    SNDATA_ROOT:  /home/acartes/Documentos/SNDATAROOT
-    SNANA_DIR:     /home/acartes/Documentos/SNANA
-    SNANA_VERSION: v11_04l
-    CWD:   /home/acartes/Escritorio/simulation
+    SNDATA_ROOT:  /home/acartes/Documentos/SNDATA_ROOT
+    SNANA_DIR:     /home/acartes/Documentos/GitHub/SNANA
+    SNANA_VERSION: v11_04m
+    CWD:   /home/acartes/Escritorio/Supernovae-Complete-Pipeline/test
     INPUT_FILE:
     - sim_DES.input
 # 
   INPUT_KEYS:
 # Output data
-    GENVERSION:              prueba_DES
+    GENVERSION:              test_DES
     FORMAT_MASK:             32  #  += 2,32,16 -> TEXT, FITS, randomCID
     GENTYPE:                 1  # true type
     SNTYPE:                  1  101  # spec Type, photID type
@@ -104,8 +104,8 @@ DOCUMENTATION:
     - List=3  FIRST=0.779674  LAST=0.518706   AVG(wrap) = 0.0 +_ 0.0 
 # 
     CPU_MINUTES:       0.0  
-    NGENLC_TOT:        462    # (462/sec)
-    NGENLC_WRITE:      100    # (100/sec)
+    NGENLC_TOT:        462    # (231/sec)
+    NGENLC_WRITE:      100    # (50/sec)
     NGENSPEC_WRITE:    0  
     EFF(SEARCH+CUTS):  0.2165 +-  0.0192
     NGEN_PER_SEASON:   1361       # NSN(GEN) in GENRANGE(z,MJD,dOmega)

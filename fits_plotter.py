@@ -42,8 +42,6 @@ def reader(file_name, fits_header=False):
 
     return light_curves
 
-test = reader('prueba_DES/prueba_DES_PHOT.FITS', fits_header=True)
-
 
 def plotter(data_frame, obs):
     data_obs = data_frame[data_frame['obs'] == obs]
