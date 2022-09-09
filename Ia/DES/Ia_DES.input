@@ -1,0 +1,60 @@
+
+
+INPUT_INCLUDE_FILE:  $SNDATA_ROOT/sample_input_files/SALT2/sim_SALT2_include.input
+
+SIMLIB_FILE:  $SNDATA_ROOT/simlib/DES/DES_10field_griz_B12.SIMLIB
+#HOSTLIB_FILE:  DES.HOSTLIB
+SOLID_ANGLE: .00456     # 15 sq deg
+
+NGEN_LC:  100               # number of SN lightcurves to generate 
+GENVERSION: Ia_DES    # SNDATA version to generate
+GENMODEL: SALT2.JLA-B14
+GENSOURCE:  RANDOM   
+
+GENFILTERS:  griz
+KCOR_FILE: $SNDATA_ROOT/kcor/DES/DES-SN3YR/kcor_DECam.fits
+
+# selection criteria for generation
+GENRANGE_RA:      -360.   360.0   deg
+GENRANGE_DECL:    -360.   360.5
+GENRANGE_PEAKMJD:  56170.0  56350.0
+GENSIGMA_SEARCH_PEAKMJD:  1.0     # sigma-smearing for  SEARCH_PEAKMJD (days)
+
+GENRANGE_REDSHIFT:  0.04    1.2
+GENSIGMA_REDSHIFT:  0.0005
+
+GENRANGE_TREST:   -18.0  70.0     # rest epoch relative to peak (days)
+
+RANSEED: 12945       # random number seed
+
+APPLY_SEARCHEFF_OPT:  3 # 1->pipeline detect; 2->spec confirmed; 3->both
+SEARCHEFF_SPEC_FILE:     $SNDATA_ROOT/models/searcheff/SEARCHEFF_SPEC_DES_G10.TXT
+SEARCHEFF_PIPELINE_FILE: $SNDATA_ROOT/models/searcheff/SEARCHEFF_PIPELINE_DES.DAT
+SEARCHEFF_PIPELINE_LOGIC_FILE: $SNDATA_ROOT/models/searcheff/SEARCHEFF_PIPELINE_LOGIC.DAT
+
+# -------------------------------------------------------------
+
+APPLY_CUTWIN_OPT:     1
+CUTWIN_NEPOCH:   5 -5.              # require 5 epochs (no S/N requirement)
+CUTWIN_TRESTMIN: -20  10
+CUTWIN_TRESTMAX:   9  40
+CUTWIN_MWEBV:      0 .20
+CUTWIN_SNRMAX:   5.0 griz 2 -20. 80.  # require 1 of griz with S/N > 5
+
+# --------------------------------
+
+# cosmological params for lightcurve generation and redshift distribution
+OMEGA_MATTER:  0.3
+OMEGA_LAMBDA:  0.7
+W0_LAMBDA:    -1.00
+H0:            70.0
+
+DNDZ:   POWERLAW 2.6E-5 2.2 # rate=2.6E-5*(1+z)^1.5 /yr/Mpc^3
+
+# smear flags: 0=off, 1=on
+SMEARFLAG_FLUX:    1  # photo-stat smearing of signal, sky, etc ...
+SMEARFLAG_ZEROPT:  1  # smear zero-point with zptsig
+
+FORMAT_MASK:  32  # 2=ascii, 32=FITS
+
+SIMGEN_DUMP: 7  CID ZCMB SALT2c SALT2x1 TRESTMIN TRESTMAX PEAKMJD

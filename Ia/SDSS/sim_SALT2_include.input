@@ -1,0 +1,24 @@
+# include file to define SALT2 model and SNIa rate vs. redshift
+
+GENMODEL: SALT2.JLA-B14
+GENMAG_SMEAR_MODELNAME: G10
+
+GENMEAN_SALT2x1:     0.0
+GENRANGE_SALT2x1:   -5.0  +3.0     # x1 (stretch) range
+GENSIGMA_SALT2x1:    1.5   0.9     # bifurcated sigmas
+
+GENMEAN_SALT2c:     0.0
+GENRANGE_SALT2c:   -0.40   0.60     # color range
+GENSIGMA_SALT2c:    0.08   0.14     # bifurcated sigmas
+
+GENALPHA_SALT2:  0.14
+GENBETA_SALT2:   3.2
+
+# - - - - 
+DNDZ: POWERLAW 2.6E-5 1.5  # 2.6E-5 * (1+z)^1.5
+
+# cosmological params for lightcurve generation and redshift distribution
+OMEGA_MATTER:  0.3
+OMEGA_LAMBDA:  0.7
+W0_LAMBDA:    -1.00
+H0:            70.0
