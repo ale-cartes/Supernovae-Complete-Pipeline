@@ -46,7 +46,7 @@ def reader(file_name, fits_header=False):
 def plotter(data_frame, obs):
     data_obs = data_frame[data_frame['obs'] == obs]
 
-    color={'u':'violet', 'g':'green', 'r':'red', 'i':(150/255, 0, 0), 'z':(60/255, 0, 0)}
+    color={'u':'purple', 'g':'green', 'r':'red', 'i':(150/255, 0, 0), 'z':(60/255, 0, 0)}
 
     fig, ax = plt.subplots(figsize=(14, 8))
 
