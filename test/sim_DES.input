@@ -51,7 +51,7 @@ RANSEED: 12945       # random number seed
 SMEARFLAG_FLUX:    1  # photo-stat smearing of signal, sky, etc ...
 SMEARFLAG_ZEROPT:  1  # smear zero-point with zptsig
 
-FORMAT_MASK:	32  # 2=ascii, 32=FITS
+FORMAT_MASK:  32  # 2=ascii, 32=FITS
 
 
 APPLY_CUTWIN_OPT: 1

@@ -1,17 +1,18 @@
 DOCUMENTATION:
   OVERVIEW:
-    TIME_START:   2022-09-02  19:12  # UT
+    TIME_START:   2022-09-09  15:54  # UT
     SURVEY:       DES
-    GENMODEL:     /home/acartes/Documentos/SNDATA_ROOT/models/NON1ASED/NON1ASED.V19_CC_noHostXT
+    GENMODEL:     NON1A
     SNIA:         False
     HOST_MACHINE: (null)
     USERNAME:     acartes
     SNDATA_ROOT:  /home/acartes/Documentos/SNDATA_ROOT
-    SNANA_DIR:     /home/acartes/Documentos/GitHub/SNANA
+    SNANA_DIR:     /home/acartes/Documentos/SNANA
     SNANA_VERSION: v11_04m
-    CWD:   /home/acartes/Escritorio/Supernovae-Complete-Pipeline/nonIa
+    CWD:   /home/acartes/Escritorio/Supernovae-Complete-Pipeline/nonIa/nonIa_DES
     INPUT_FILE:
-    - SIMGEN_INCLUDE_NON1A+Revised.INPUT
+    - nonIa_DES.input
+    - $SNDATA_ROOT/snsed/NON1A/SIMGEN_INCLUDE_NON1A_J17-beforeAdjust.INPUT
 # 
   INPUT_KEYS:
 # Output data
@@ -23,98 +24,85 @@ DOCUMENTATION:
     CIDRAN_MIN:              0  
     CIDRAN_MAX:              3000000  
 # Source model
-    GENMODEL:                $SNDATA_ROOT/models/NON1ASED/NON1ASED.V19_CC_noHostXT 
-    GENMODEL_ERRSCALE:       2.0 
+    GENMODEL:                NON1A 
     NON1A_KEYS:              5 INDEX WGT MAGOFF MAGSMEAR SNTYPE 
     NON1A:                  
-    - 834 0.007841 0.10 0.70 21 
-    - 825 0.007841 0.10 0.70 21 
-    - 840 0.007841 0.10 0.70 21 
-    - 845 0.007841 0.10 0.70 21 
-    - 819 0.007841 0.10 0.70 21 
-    - 851 0.007841 0.10 0.70 21 
-    - 830 0.009919 0.00 1.10 23 
-    - 829 0.009919 0.00 1.10 23 
-    - 822 0.009919 0.00 1.10 23 
-    - 847 0.009919 0.00 1.10 23 
-    - 865 0.009919 0.00 1.10 23 
-    - 849 0.009919 0.00 1.10 23 
-    - 850 0.009919 0.00 1.10 23 
-    - 848 0.009919 0.00 1.10 23 
-    - 832 0.009919 0.00 1.10 23 
-    - 859 0.009919 0.00 1.10 23 
-    - 804 0.009919 -2.50 1.10 23 
-    - 864 0.027069 0.90 0.90 25 
-    - 866 0.027069 0.90 0.90 25 
-    - 835 0.027069 0.90 0.90 25 
-    - 844 0.027069 0.40 0.90 25 
-    - 837 0.027069 0.90 0.90 25 
-    - 838 0.027069 0.90 0.90 25 
-    - 855 0.027069 0.90 0.90 25 
-    - 863 0.027069 1.20 0.90 25 
-    - 843 0.027069 0.90 0.90 25 
-    - 861 0.027069 1.20 0.90 25 
-    - 860 0.027069 0.90 0.90 25 
-    - 858 0.027069 1.20 0.90 25 
-    - 857 0.027069 0.40 0.90 25 
-    - 856 0.027069 0.90 0.90 25 
-    - 852 0.027069 0.90 0.90 25 
-    - 839 0.027069 0.40 0.90 25 
-    - 801 0.027069 0.90 0.90 25 
-    - 802 0.027069 0.90 0.90 25 
-    - 867 0.027069 0.90 0.90 25 
-    - 824 0.027069 1.20 0.90 25 
-    - 808 0.027069 0.40 0.90 25 
-    - 811 0.027069 0.90 0.90 25 
-    - 831 0.027069 0.90 0.90 25 
-    - 817 0.027069 0.40 0.90 25 
-    - 833 0.008316 1.20 1.15 32 
-    - 807 0.008316 1.20 1.15 32 
-    - 854 0.008316 1.20 1.15 32 
-    - 813 0.008316 1.20 1.15 32 
-    - 815 0.008316 1.20 1.15 32 
-    - 816 0.008316 1.20 1.15 32 
-    - 803 0.008316 1.20 1.15 32 
-    - 827 0.008316 1.20 1.15 32 
-    - 821 0.008316 1.20 1.15 32 
-    - 842 0.008316 1.20 1.15 32 
-    - 841 0.008316 1.20 1.15 32 
-    - 828 0.008316 1.20 1.15 32 
-    - 818 0.008316 1.20 1.15 32 
-    - 846 0.010725 -1.05 0.55 33 
-    - 805 0.010725 0.50 0.55 33 
-    - 862 0.010725 0.50 0.55 33 
-    - 823 0.010725 0.50 0.55 33 
-    - 814 0.010725 0.50 0.55 33 
-    - 812 0.010725 0.50 0.55 33 
-    - 810 0.010725 0.50 0.55 33 
-    - 826 0.001835 1.20 0.55 35 
-    - 806 0.001835 1.20 0.55 35 
-    - 853 0.001835 0.50 0.55 35 
-    - 836 0.001835 1.20 0.55 35 
-    - 820 0.001835 0.50 0.55 35 
-    - 809 0.001835 0.50 0.55 35 
+    - 201 0.0246 2.100 1.050 20 
+    - 204 0.0246 2.100 1.050 20 
+    - 208 0.0246 2.100 1.050 20 
+    - 210 0.0246 2.100 1.050 20 
+    - 213 0.0246 2.100 1.050 20 
+    - 214 0.0246 2.100 1.050 20 
+    - 215 0.0246 2.100 1.050 20 
+    - 216 0.0246 2.100 1.050 20 
+    - 219 0.0246 2.100 1.050 20 
+    - 220 0.0246 2.100 1.050 20 
+    - 221 0.0246 2.100 1.050 20 
+    - 222 0.0246 2.100 1.050 20 
+    - 223 0.0246 2.100 1.050 20 
+    - 224 0.0246 2.100 1.050 20 
+    - 225 0.0246 2.100 1.050 20 
+    - 226 0.0246 2.100 1.050 20 
+    - 227 0.0246 2.100 1.050 20 
+    - 228 0.0246 2.100 1.050 20 
+    - 229 0.0246 2.100 1.050 20 
+    - 230 0.0246 2.100 1.050 20 
+    - 231 0.0246 2.100 1.050 20 
+    - 232 0.0246 2.100 1.050 20 
+    - 233 0.0246 2.100 1.050 20 
+    - 235 0.0246 2.100 1.050 20 
+    - 206 0.0200 1.500 1.500 21 
+    - 209 0.0200 1.500 1.500 21 
+    - 002 0.0800 -0.550 0.640 22 
+    - 103 0.0191 0.770 0.410 32 
+    - 104 0.0191 2.670 0.410 32 
+    - 105 0.0191 -0.628 0.410 32 
+    - 202 0.0191 0.346 0.410 32 
+    - 203 0.0191 -0.099 0.410 32 
+    - 212 0.0191 0.950 0.410 32 
+    - 234 0.0191 0.281 0.410 32 
+    - 021 0.0167 1.480 1.100 33 
+    - 022 0.0167 1.480 1.100 33 
+    - 101 0.0167 1.480 1.100 33 
+    - 102 0.0167 1.480 1.100 33 
+    - 205 0.0167 1.480 1.100 33 
+    - 207 0.0167 1.480 1.100 33 
+    - 211 0.0167 1.480 1.100 33 
+    - 217 0.0167 1.480 1.100 33 
+    - 218 0.0167 1.480 1.100 33 
+    - 400 0.0213 -0.650 0.000 23 
+    - 401 0.0213 -0.650 0.000 23 
+    - 402 0.0213 -0.650 0.000 23 
+    - 403 0.0213 -0.650 0.000 23 
+    PEC1A:                  
+    - 502 0.25 -17.447 0.5250 42 
+    - 503 0.25 -0.030 0.5250 42 
+    - 506 0.25 -0.030 0.5250 42 
+    - 509 0.25 -0.030 0.5250 42 
     GENMAG_SMEAR:            1.0000e-03  # coherent scatter (mag)
-    GENMODEL_ERRSCALE:       2.0000  
+# Cosmology inputs
+    OMEGA_MATTER:            0.3 
+    OMEGA_LAMBDA:            0.7 
+    W0_LAMBDA:               -1.00 
+    H0:                      70.0 
 # Instrumental inputs
     GENFILTERS:          griz 
-    KCOR_FILE:           $SNDATA_ROOT/kcor/DES/20130322/kcor_DES.fits 
+    KCOR_FILE:           $SNDATA_ROOT/kcor/DES/DES-SN3YR/kcor_DECam.fits 
     SIMLIB_FILE:             $SNDATA_ROOT/simlib/DES/DES_10field_griz_B12.SIMLIB 
     SMEARFLAG_FLUX:      1  # 1->add Poisson noise
-    SMEARFLAG_ZEROPT:    0  # +=1->apply scatter, +=2->add to FLUXERRCAL
-    EXPOSURE_TIME:           1 
+    SMEARFLAG_ZEROPT:    1  # +=1->apply scatter, +=2->add to FLUXERRCAL
 # SEARCHEFF/detections
-    SEARCHEFF_PIPELINE_LOGIC_FILE:  NONE
+    SEARCHEFF_PIPELINE_LOGIC_FILE:  $SNDATA_ROOT/models/searcheff/SEARCHEFF_PIPELINE_LOGIC.DAT
     NEWMJD_DIF:              7.0000e-03  # day-sep if > 1 detections required
-    SEARCHEFF_PIPELINE_EFF_FILE:  NONE
-    SEARCHEFF_SPEC_FILE:     NONE
+    SEARCHEFF_PIPELINE_EFF_FILE:  $SNDATA_ROOT/models/searcheff/SEARCHEFF_PIPELINE_DES.DAT
+    SEARCHEFF_SPEC_FILE:     $SNDATA_ROOT/models/searcheff/SEARCHEFF_SPEC_DES_G10.TXT
     SEARCHEFF_zHOST_FILE:    NONE
-    APPLY_SEARCHEFF_OPT:     0  # += 1,2,4 => pipe,spec,zhost
+    APPLY_SEARCHEFF_OPT:     3  # += 1,2,4 => pipe,spec,zhost
 # Redshift inputs
     GENRANGE_REDSHIFT:       0.0400  1.2000  
     GENSIGMA_REDSHIFT:       5.0000e-04  
     GENSIGMA_VPEC:           0  # true vpec scatter (km/sec)
-    VPEC_ERR:                0  # vpec scatter after correction (km/sec)
+    VPEC_ERR:                0  # vpec error after correction (km/sec)
 # Epoch & sky coverage inputs
     GENRANGE_PEAKMJD:        56170.0000  56350.0000  
     GENSIGMA_PEAKMJD:        1.0000  
@@ -122,41 +110,53 @@ DOCUMENTATION:
     SOLID_ANGLE:             4.5600e-03  
 # Galactic extinction
 # Population and rate-model params
-    DNDZ:                    POWERLAW 2.6E-5 1.5 
+    DNDZ:                   
+    - POWERLAW2 5E-5 4.5 0.0 0.8 
+    - POWERLAW2 5.44E-4 0.0 0.8 9.1 
+    DNDZ_PEC1A:              POWERLAW 2.6E-5 2.2 
 # Misc inputs
     GENSOURCE:               RANDOM
-    RANSEED:                 0  
+    RANSEED:                 12945  
     DEBUG_FLAG:              0  
+    SIMGEN_DUMP:             7 CID ZCMB SALT2c SALT2x1 TRESTMIN TRESTMAX PEAKMJD 
+# CUTWIN inputs
+    APPLY_CUTWIN_OPT:        1  
+    CUTWIN_NEPOCH:           5 -5. 
+    CUTWIN_TRESTMIN:         -20 10 
+    CUTWIN_TRESTMAX:         9 40 
+    CUTWIN_MWEBV:            0 .20 
+    CUTWIN_SNRMAX:           5.0 griz 2 -20. 80. 
 # 
   INPUT_NOTES:
   - Poisson noise is ON 
   - Reported flux-uncertainty includes SKY+GALAXY+SOURCE
   - SB-dependent flux scatter is OFF
-  -  POWERLAW RATE MODEL:  2.60e-05*(1+z)^1.50  (0.0 < z < 4.0) 
-  -     MODEL_RATE(z=0.04) = 2.758e-05/Mpc^3/yr    
-  -     MODEL_RATE(z=0.24) = 3.590e-05/Mpc^3/yr    
-  -     MODEL_RATE(z=0.44) = 4.493e-05/Mpc^3/yr    
-  -     MODEL_RATE(z=0.64) = 5.461e-05/Mpc^3/yr    
-  -     MODEL_RATE(z=0.84) = 6.489e-05/Mpc^3/yr    
-  -     MODEL_RATE(z=1.04) = 7.576e-05/Mpc^3/yr    
-  -  Calculated Number of EVENTS per season =  1361 
+  -  POWERLAW RATE MODEL:  5.00e-05*(1+z)^4.50  (0.0 < z < 0.8) 
+  -  POWERLAW RATE MODEL:  5.44e-04*(1+z)^0.00  (0.8 < z < 9.1) 
+  -     MODEL_RATE(z=0.04) = 8.799e-05/Mpc^3/yr   (0.322 PEC1a) 
+  -     MODEL_RATE(z=0.24) = 1.734e-04/Mpc^3/yr   (0.241 PEC1a) 
+  -     MODEL_RATE(z=0.44) = 3.160e-04/Mpc^3/yr   (0.184 PEC1a) 
+  -     MODEL_RATE(z=0.64) = 5.404e-04/Mpc^3/yr   (0.143 PEC1a) 
+  -     MODEL_RATE(z=0.84) = 6.434e-04/Mpc^3/yr   (0.155 PEC1a) 
+  -     MODEL_RATE(z=1.04) = 6.688e-04/Mpc^3/yr   (0.187 PEC1a) 
+  -  Calculated Number of EVENTS per season =  1.272e+04   (0.169 PEC1A)
   - H0 =  70.00 km/s/Mpc 
-  - Omega_{M,L} =  0.315, 0.685     w0,wa = -1.00,0.000
-  - APPLY_SEARCHEFF_OPT=0 --> No trigger requirements 
-  - PIPELINE requires 0 detections among  (MJD dif > 0.0070 days) 
+  - Omega_{M,L} =  0.300, 0.700     w0,wa = -1.00,0.000
+  - APPLY_SEARCHEFF_OPT=3 --> Require EFF(PIPELINE+SPEC) 
+  - PIPELINE requires 2 detections among g+r+i+z (MJD dif > 0.0070 days) 
 # 
   OUTPUT_SUMMARY:
     RANDOM_SYNC: 
-    - List=1  FIRST=0.237788  LAST=0.984342   AVG(wrap) = 0.6 +_ 0.2 
-    - List=2  FIRST=0.766152  LAST=0.676716   AVG(wrap) = 0.3 +_ 0.0 
-    - List=3  FIRST=0.877636  LAST=0.328599   AVG(wrap) = 0.0 +_ 0.0 
+    - List=1  FIRST=0.546307  LAST=0.985533   AVG(wrap) = 0.2 +_ 0.0 
+    - List=2  FIRST=0.278138  LAST=0.239499   AVG(wrap) = 0.3 +_ 0.0 
+    - List=3  FIRST=0.779674  LAST=0.515794   AVG(wrap) = 0.0 +_ 0.0 
 # 
-    CPU_MINUTES:       0.7  
-    NGENLC_TOT:        100    # (2/sec)
-    NGENLC_WRITE:      100    # (2/sec)
+    CPU_MINUTES:       1.5  
+    NGENLC_TOT:        211989    # (2409/sec)
+    NGENLC_WRITE:      20    # (0/sec)
     NGENSPEC_WRITE:    0  
-    EFF(SEARCH+CUTS):  1.0000 +-  0.0100
-    NGEN_PER_SEASON:   1361       # NSN(GEN) in GENRANGE(z,MJD,dOmega)
-    NACC_PER_SEASON:   1361 +_ 136  # NSN(ACCEPT) after trigger+cuts
-    NREJECT:  [0,0,0,  0,0]   # [NEP<1,GENRANGE,PEAKMAG,  SEARCHEFF,CUTWIN] 
+    EFF(SEARCH+CUTS):  0.0001 +-  0.0000
+    NGEN_PER_SEASON:   12721       # NSN(GEN) in GENRANGE(z,MJD,dOmega)
+    NACC_PER_SEASON:   1 +_ 0  # NSN(ACCEPT) after trigger+cuts
+    NREJECT:  [846,0,0,  211121,2]   # [NEP<5,GENRANGE,PEAKMAG,  SEARCHEFF,CUTWIN] 
 DOCUMENTATION_END:
