@@ -1,60 +1,102 @@
+# SNANA input file template
+# acartes
 
+GENVERSION: DES_Ia # Name of the simulation
+GENMODEL: SALT2.JLA-B14 # model in $SNDATA_ROOT/models
 
-INPUT_INCLUDE_FILE:  $SNDATA_ROOT/sample_input_files/SALT2/sim_SALT2_include.input
+# NON1A
+# ======
+# GENMODEL: NON1A
+# INPUT_FILE_INCLUDE: $SNDATA_ROOT/snsed/NONIA/SIMGEN/INCLUDE/NON1A_J17.input
+# DNDZ_PEC1A: POWERLAW 2.6E-5 2.2 # rate = 2.6E-5 * (1+z)^1.5 /yr/Mpc^3
 
-SIMLIB_FILE:  $SNDATA_ROOT/simlib/DES/DES_10field_griz_B12.SIMLIB
-#HOSTLIB_FILE:  DES.HOSTLIB
-SOLID_ANGLE: .00456     # 15 sq deg
+GENSOURCE: RANDOM	# Monte Carlo simulations
 
-NGEN_LC:  100               # number of SN lightcurves to generate 
-GENVERSION: Ia_DES    # SNDATA version to generate
-GENMODEL: SALT2.JLA-B14
-GENSOURCE:  RANDOM   
+SIMLIB_FILE: $SNDATA_ROOT/simlib/DES/DES-SN5YR_DES_DIFFIMG.SIMLIB # parameters of the survey observations 
+# ($SNDATA_ROOT/SIMLIB)
 
-GENFILTERS:  griz
-KCOR_FILE: $SNDATA_ROOT/kcor/DES/DES-SN3YR/kcor_DECam.fits
+NGEN_LC: 1000	# number of SN light curves to generate
 
+GENFILTERS: griz	# or griz, it depends on availability
+KCOR_FILE: $SNDATA_ROOT/kcor/DES/DES-SN3YR/kcor_DECam.fits		# K correction file ($SNDATA_ROOT/kcor)
+
+# =================================
 # selection criteria for generation
-GENRANGE_RA:      -360.   360.0   deg
-GENRANGE_DECL:    -360.   360.5
-GENRANGE_PEAKMJD:  56170.0  56350.0
-GENSIGMA_SEARCH_PEAKMJD:  1.0     # sigma-smearing for  SEARCH_PEAKMJD (days)
+# =================================
 
-GENRANGE_REDSHIFT:  0.04    1.2
-GENSIGMA_REDSHIFT:  0.0005
+RANSEED: 1202
 
-GENRANGE_TREST:   -18.0  70.0     # rest epoch relative to peak (days)
+GENRANGE_RA: -360. 360.0 deg
+GENRANGE_DECL: -360. 360.0
+GENRANGE_PEAKMJD: 56000.0 58000.0
+GENSIGMA_SEARCH_PEAKMJD: 1.0  # sigma-smearing for  SEARCH_PEAKMJD (days)
 
-RANSEED: 12945       # random number seed
+GENRANGE_REDSHIFT: 0.04 1.2 # Pantheon+: 0.001 < z < 2.26
+GENSIGMA_REDSHIFT: 0.0005
 
-APPLY_SEARCHEFF_OPT:  3 # 1->pipeline detect; 2->spec confirmed; 3->both
-SEARCHEFF_SPEC_FILE:     $SNDATA_ROOT/models/searcheff/SEARCHEFF_SPEC_DES_G10.TXT
+DNDZ: POWERLAW 2.6E-5 2.2 # rate = 2.6E-5 * (1+z)^1.5 /yr/Mpc^3
+
+GENRANGE_TREST: -20.0 80.0 # rest epoch relative to peak (days)
+
+
+APPLY_SEARCHEFF_OPT: 2	# 1: pipeline detect; 2: spec confirmed; 3: both
+
+# Search Efficiency file:
+# probability of detecting a source as a function of magnitude
 SEARCHEFF_PIPELINE_FILE: $SNDATA_ROOT/models/searcheff/SEARCHEFF_PIPELINE_DES.DAT
+
+# what combination of individual detections in various filters and epochs
+# constitutes a "detection"
 SEARCHEFF_PIPELINE_LOGIC_FILE: $SNDATA_ROOT/models/searcheff/SEARCHEFF_PIPELINE_LOGIC.DAT
 
-# -------------------------------------------------------------
+# human/spectroscopic efficiency (default ϵ_spec=1)
+SEARCHEFF_SPEC_FILE: $SNDATA_ROOT/models/searcheff/SEARCHEFF_SPEC_DES_G10.TXT
+
+
+OPT_MEWEBV: 1  # simulate galactic extinction from values in SIMLIB file
+
+# smear flags: 0=off, 1=on
+SMEARFLAG_FLUX: 1  # photo-stat smearing of signal, sky, etc (Poisson noise)
+SMEARFLAG_ZEROPT: 1  # smear zero-point with zptsig
+
+
+# ================
+# Some sample cuts
+# ================
 
 APPLY_CUTWIN_OPT:     1
-CUTWIN_NEPOCH:   5 -5.              # require 5 epochs (no S/N requirement)
+# CUTWIN_NEPOCH:   5 -5.              # require 5 epochs (no S/N requirement)
 CUTWIN_TRESTMIN: -20  10
 CUTWIN_TRESTMAX:   9  40
 CUTWIN_MWEBV:      0 .20
 CUTWIN_SNRMAX:   5.0 griz 2 -20. 80.  # require 1 of griz with S/N > 5
 
-# --------------------------------
 
-# cosmological params for lightcurve generation and redshift distribution
-OMEGA_MATTER:  0.3
-OMEGA_LAMBDA:  0.7
-W0_LAMBDA:    -1.00
-H0:            70.0
+# ==================
+# define SALT2 model
+# ==================
 
-DNDZ:   POWERLAW 2.6E-5 2.2 # rate=2.6E-5*(1+z)^1.5 /yr/Mpc^3
+GENMEAN_SALT2x1:     0.0
+GENRANGE_SALT2x1:   -5.0  +3.0     # x1 (stretch) range
+GENSIGMA_SALT2x1:    1.5   0.9     # bifurcated sigmas
 
-# smear flags: 0=off, 1=on
-SMEARFLAG_FLUX:    1  # photo-stat smearing of signal, sky, etc ...
-SMEARFLAG_ZEROPT:  1  # smear zero-point with zptsig
+GENMEAN_SALT2c:     0.0
+GENRANGE_SALT2c:   -0.40   0.60     # color range
+GENSIGMA_SALT2c:    0.08   0.14     # bifurcated sigmas
+
+GENALPHA_SALT2:  0.14
+GENBETA_SALT2:   3.2
+
+
+# =======================
+# cosmological parameters
+# =======================
+
+OMEGA_MATTER: 0.3
+OMEGA_LAMBDA: 0.7
+W0_LAMBDA: -1.00
+H0: 70.0
+
 
 FORMAT_MASK:  32  # 2=ascii, 32=FITS
-
-SIMGEN_DUMP: 7  CID ZCMB SALT2c SALT2x1 TRESTMIN TRESTMAX PEAKMJD
+SIMGEN_DUMP: 9 CID Z PEAKMJD SALT2c SALT2x1 SNRMAX TRESTMIN TRESTMAX NON1A_INDEX
