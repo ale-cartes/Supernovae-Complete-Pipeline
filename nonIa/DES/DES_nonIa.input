@@ -1,23 +1,24 @@
 # SNANA input file template
 # acartes
 
-GENVERSION:  # Name of the simulation
-GENMODEL:  # model in $SNDATA_ROOT/models
+GENVERSION: DES_nonIa  # Name of the simulation
 
 # NON1A
 # ======
-# GENMODEL: NON1A
-# INPUT_FILE_INCLUDE: $SNDATA_ROOT/models/NON1ASED/SIMGEN/INCLUDE/NON1A_J17.input
-# DNDZ_PEC1A: POWERLAW 2.6E-5 2.2 # rate = 2.6E-5 * (1+z)^1.5 /yr/Mpc^3
+GENMODEL: NON1A
+INPUT_FILE_INCLUDE: $SNDATA_ROOT/models/NON1ASED/NON1ASED.P18_CC/SIMGEN_INCLUDE_NON1A.INPUT
 
 GENSOURCE: RANDOM  # Monte Carlo simulations
 
-SIMLIB_FILE:  # parameters of the survey observations ($SNDATA_ROOT/SIMLIB)
+SIMLIB_FILE:  $SNDATA_ROOT/simlib/DES/DES-SN5YR_DES_DIFFIMG.SIMLIB # parameters of the survey observations 
+# ($SNDATA_ROOT/SIMLIB)
 
-NGEN_LC:  # number of SN light curves to generate
+NGEN_LC: 100 # number of SN light curves to generate
 
-GENFILTERS: ugriz  # or griz, it depends on availability
-KCOR_FILE:  # K correction file ($SNDATA_ROOT/kcor)
+
+
+GENFILTERS: griz  # or griz, it depends on availability
+KCOR_FILE: $SNDATA_ROOT/kcor/DES/DES-SN3YR/kcor_DECam.fits	# K correction file ($SNDATA_ROOT/kcor)
 
 # =================================
 # selection criteria for generation
@@ -27,29 +28,30 @@ RANSEED: 1202
 
 GENRANGE_RA:    -360.  360.0  deg
 GENRANGE_DECL:  -360.  360.0
-GENRANGE_PEAKMJD:  56170.0  56350.0
-GENSIGMA_SEARCH_PEAKMJD: 1.0  # sigma-smearing for  SEARCH_PEAKMJD (days)
+GENRANGE_PEAKMJD:  50000.0  60000.0
+GENSIGMA_SEARCH_PEAKMJD: 10.0  # sigma-smearing for  SEARCH_PEAKMJD (days)
 
-GENRANGE_REDSHIFT:  0.001  1  # Pantheon+: 0.001 < z < 2.26
-GENSIGMA_REDSHIFT:  0.0005
+GENRANGE_REDSHIFT:  0.04  1  # Pantheon+: 0.001 < z < 2.26
+GENSIGMA_REDSHIFT:  0.05
 
+DNDZ_PEC1A: HUBBLE
 DNDZ:  POWERLAW 2.6E-5 2.2 # rate = 2.6E-5 * (1+z)^1.5 /yr/Mpc^3
 
-GENRANGE_TREST: -20.0  80.0  # rest epoch relative to peak (days)
+GENRANGE_TREST: -20  80.0  # rest epoch relative to peak (days)
 
 
 APPLY_SEARCHEFF_OPT: 2  # 1: pipeline detect; 2: spec confirmed; 3: both
 
 # Search Efficiency file:
 # probability of detecting a source as a function of magnitude
-SEARCHEFF_PIPELINE_FILE: # $SNDATA_ROOT/models/searcheff/SEARCHEFF_PIPELINE_DES.DAT
+SEARCHEFF_PIPELINE_FILE: $SNDATA_ROOT/models/searcheff/SEARCHEFF_PIPELINE_DES.DAT
 
 # what combination of individual detections in various filters and epochs
 # constitutes a "detection"
-SEARCHEFF_PIPELINE_LOGIC_FILE: # $SNDATA_ROOT/models/searcheff/SEARCHEFF_PIPELINE_LOGIC.DAT
+SEARCHEFF_PIPELINE_LOGIC_FILE: $SNDATA_ROOT/models/searcheff/SEARCHEFF_PIPELINE_LOGIC.DAT
 
-# human/spectroscopic efficiency (default ϵ_spec=1) -> comment for nonIa simulation
-SEARCHEFF_SPEC_FILE: # $SNDATA_ROOT/models/searcheff/SEARCHEFF_SPEC_DES_G10.TXT
+# human/spectroscopic efficiency (default ϵ_spec=1)
+# SEARCHEFF_SPEC_FILE: $SNDATA_ROOT/models/searcheff/SEARCHEFF_SPEC_DES_G10.TXT
 
 
 OPT_MEWEBV: 1  # simulate galactic extinction from values in SIMLIB file
@@ -64,9 +66,9 @@ SMEARFLAG_ZEROPT:  1  # smear zero-point with zptsig
 # ================
 
 APPLY_CUTWIN_OPT:     1
-CUTWIN_NEPOCH:   5 -5.              # require 5 epochs (no S/N requirement)
-CUTWIN_TRESTMIN: -20  10
-CUTWIN_TRESTMAX:   9  40
+# CUTWIN_NEPOCH:   5 -5.              # require 5 epochs (no S/N requirement)
+# CUTWIN_TRESTMIN: -20  10
+# CUTWIN_TRESTMAX:   9  40
 CUTWIN_MWEBV:      0 .20
 CUTWIN_SNRMAX:   5.0 griz 2 -20. 80.  # require 1 of griz with S/N > 5
 
