@@ -18,7 +18,7 @@ SIMLIB_FILE: $SNDATA_ROOT/simlib/DES/DES-SN5YR_DES_DIFFIMG.SIMLIB # parameters o
 NGEN_LC: 1000	# number of SN light curves to generate
 
 GENFILTERS: griz	# or griz, it depends on availability
-KCOR_FILE: $SNDATA_ROOT/kcor/DES/DES-SN3YR/kcor_DECam.fits		# K correction file ($SNDATA_ROOT/kcor)
+KCOR_FILE: $SNDATA_ROOT/kcor/DES/DES-SN3YR/kcor_DECam.fits	# K correction file ($SNDATA_ROOT/kcor)
 
 # =================================
 # selection criteria for generation
@@ -65,7 +65,7 @@ SMEARFLAG_ZEROPT: 1  # smear zero-point with zptsig
 # ================
 
 APPLY_CUTWIN_OPT:     1
-# CUTWIN_NEPOCH:   5 -5.              # require 5 epochs (no S/N requirement)
+CUTWIN_NEPOCH:   5 -5.              # require 5 epochs (no S/N requirement)
 CUTWIN_TRESTMIN: -20  10
 CUTWIN_TRESTMAX:   9  40
 CUTWIN_MWEBV:      0 .20

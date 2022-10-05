@@ -43,7 +43,30 @@ def reader(file_name, fits_header=False):
     return light_curves
 
 
-def plotter(data_frame, obs):
+def summary(dump_file):
+    data = pd.read_csv(dump_file, delimiter=' ', header=5)
+    data.drop(data.columns[[0, 1]], axis=1, inplace=True)
+
+    for i, type in enumerate(data['SNTYPE']):
+        if type == 20: 
+            data.at[i, 'SNTYPE'] = "II+IIP"
+        
+        elif type == 21:
+            data.at[i, 'SNTYPE'] = "IIn+IIN"
+        
+        elif type == 22:
+            data.at[i, 'SNTYPE'] = "IIL"
+        
+        elif type == 32:
+            data.at[i, 'SNTYPE'] = "Ib"
+        
+        elif type == 33:
+            data.at[i, 'SNTYPE'] = "Ic+Ibc"
+
+    return data
+
+
+def plotter(data_frame, obs, SNtype=None):
     data_obs = data_frame[data_frame['obs'] == obs]
 
     color={'u':'purple', 'g':'green', 'r':'red', 'i':(150/255, 0, 0), 'z':(60/255, 0, 0)}
@@ -60,6 +83,8 @@ def plotter(data_frame, obs):
         
     ax.set_xlabel('MJD')
     ax.set_ylabel('Flux (ADU)')
-    ax.set_title('{}, obs: {}'.format(data_frame.name, obs))
+    ax.set_title(f'{data_frame.name}, obs: {obs}')
+    if SNtype != None:
+        ax.set_title(f'{data_frame.name}, obs: {obs}, SN type: {SNtype}')
     ax.legend()
     plt.show()
