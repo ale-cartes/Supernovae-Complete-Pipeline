@@ -1,0 +1,104 @@
+# SNANA input file template
+# acartes
+
+GENVERSION: SDSS_nonIa  # Name of the simulation
+
+# NON1A
+# ======
+GENMODEL: NON1A
+INPUT_FILE_INCLUDE: $SNDATA_ROOT/models/NON1ASED/NON1ASED.P18_CC/SIMGEN_INCLUDE_NON1A.INPUT
+
+GENSOURCE: RANDOM  # Monte Carlo simulations
+
+SIMLIB_FILE:  $SNDATA_ROOT/simlib/SDSS/SDSS_3year.SIMLIB # parameters of the survey observations 
+# ($SNDATA_ROOT/SIMLIB)
+
+NGEN_LC: 100 # number of SN light curves to generate
+
+
+
+GENFILTERS: ugriz  # or griz, it depends on availability
+KCOR_FILE: $SNDATA_ROOT/kcor/SDSS/SNCOSM09+fitsFormat/kcor_SDSS_Bessell90_BD17.fits	# K correction file ($SNDATA_ROOT/kcor)
+
+# =================================
+# selection criteria for generation
+# =================================
+
+RANSEED: 1202
+
+GENRANGE_RA:    -360.  360.0  deg
+GENRANGE_DECL:  -360.  360.0
+GENRANGE_PEAKMJD:  50000.0  60000.0
+GENSIGMA_SEARCH_PEAKMJD: 10.0  # sigma-smearing for  SEARCH_PEAKMJD (days)
+
+GENRANGE_REDSHIFT:  0.04  1  # Pantheon+: 0.001 < z < 2.26
+GENSIGMA_REDSHIFT:  0.05
+
+DNDZ_PEC1A: HUBBLE
+DNDZ:  POWERLAW 2.6E-5 2.2 # rate = 2.6E-5 * (1+z)^1.5 /yr/Mpc^3
+
+GENRANGE_TREST: -20  80.0  # rest epoch relative to peak (days)
+
+
+APPLY_SEARCHEFF_OPT: 2  # 1: pipeline detect; 2: spec confirmed; 3: both
+
+# Search Efficiency file:
+# probability of detecting a source as a function of magnitude
+SEARCHEFF_PIPELINE_FILE: $SNDATA_ROOT/models/searcheff/SEARCHEFF_PIPELINE_SDSS.DAT
+
+# what combination of individual detections in various filters and epochs
+# constitutes a "detection"
+SEARCHEFF_PIPELINE_LOGIC_FILE: $SNDATA_ROOT/models/searcheff/SEARCHEFF_PIPELINE_LOGIC.DAT
+
+# human/spectroscopic efficiency (default ϵ_spec=1)
+# SEARCHEFF_SPEC_FILE: $SNDATA_ROOT/models/searcheff/SEARCHEFF_SPEC_DES_G10.TXT
+
+
+OPT_MEWEBV: 1  # simulate galactic extinction from values in SIMLIB file
+
+# smear flags: 0=off, 1=on
+SMEARFLAG_FLUX:    1  # photo-stat smearing of signal, sky, etc (Poisson noise)
+SMEARFLAG_ZEROPT:  1  # smear zero-point with zptsig
+
+
+# ================
+# Some sample cuts
+# ================
+
+APPLY_CUTWIN_OPT:     1
+# CUTWIN_NEPOCH:   5 -5.              # require 5 epochs (no S/N requirement)
+# CUTWIN_TRESTMIN: -20  10
+# CUTWIN_TRESTMAX:   9  40
+CUTWIN_MWEBV:      0 .20
+CUTWIN_SNRMAX:   5.0 griz 2 -20. 80.  # require 1 of griz with S/N > 5
+
+
+# ==================
+# define SALT2 model
+# ==================
+
+GENMEAN_SALT2x1:     0.0
+GENRANGE_SALT2x1:   -5.0  +3.0     # x1 (stretch) range
+GENSIGMA_SALT2x1:    1.5   0.9     # bifurcated sigmas
+
+GENMEAN_SALT2c:     0.0
+GENRANGE_SALT2c:   -0.40   0.60     # color range
+GENSIGMA_SALT2c:    0.08   0.14     # bifurcated sigmas
+
+GENALPHA_SALT2:  0.14
+GENBETA_SALT2:   3.2
+
+
+# =======================
+# cosmological parameters
+# =======================
+
+OMEGA_MATTER:  0.3
+OMEGA_LAMBDA:  0.7
+W0_LAMBDA:  -1.00
+H0:  70.0
+
+
+FORMAT_MASK:  32  # 2=ascii, 32=FITS
+SIMGEN_DUMP: 10 CID Z PEAKMJD SALT2c SALT2x1 SNRMAX TRESTMIN TRESTMAX NON1A_INDEX SNTYPE
+

@@ -63,10 +63,13 @@ def summary(dump_file):
         elif type == 33:
             data.at[i, 'SNTYPE'] = "Ic+Ibc"
 
+        elif type == 1:
+            data.at[i, 'SNTYPE'] = "Ia"
+
     return data
 
 
-def plotter(data_frame, obs, SNtype=None):
+def plotter(data_frame, obs, summary=None):
     data_obs = data_frame[data_frame['obs'] == obs]
 
     color={'u':'purple', 'g':'green', 'r':'red', 'i':(150/255, 0, 0), 'z':(60/255, 0, 0)}
@@ -84,7 +87,10 @@ def plotter(data_frame, obs, SNtype=None):
     ax.set_xlabel('MJD')
     ax.set_ylabel('Flux (ADU)')
     ax.set_title(f'{data_frame.name}, obs: {obs}')
-    if SNtype != None:
-        ax.set_title(f'{data_frame.name}, obs: {obs}, SN type: {SNtype}')
+    if type(summary) != type(None):
+        ax.set_title(rf"{data_frame.name}, " + \
+                     rf"obs: {obs}, " + \
+                     rf"peak: {summary['PEAKMJD'].values[0]}, " + \
+                     rf"SN type: {summary['SNTYPE'].values[0]}")
     ax.legend()
     plt.show()
