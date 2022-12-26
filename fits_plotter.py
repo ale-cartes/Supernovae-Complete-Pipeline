@@ -8,7 +8,7 @@ from astropy.io import fits
 def reader(file_name, fits_header=False):
     """
     Function that reads fits files and return a light-curves
-    list
+    data frame
 
     Input
     ------

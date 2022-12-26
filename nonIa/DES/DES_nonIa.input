@@ -13,7 +13,7 @@ GENSOURCE: RANDOM  # Monte Carlo simulations
 SIMLIB_FILE:  $SNDATA_ROOT/simlib/DES/DES-SN5YR_DES_DIFFIMG.SIMLIB # parameters of the survey observations 
 # ($SNDATA_ROOT/SIMLIB)
 
-NGEN_LC: 100 # number of SN light curves to generate
+NGEN_LC: 100000 # number of SN light curves to generate
 
 
 
@@ -40,7 +40,7 @@ DNDZ:  POWERLAW 2.6E-5 2.2 # rate = 2.6E-5 * (1+z)^1.5 /yr/Mpc^3
 GENRANGE_TREST: -20  80.0  # rest epoch relative to peak (days)
 
 
-APPLY_SEARCHEFF_OPT: 2  # 1: pipeline detect; 2: spec confirmed; 3: both
+APPLY_SEARCHEFF_OPT: 3 #0: keep all SNe; 1: pipeline detect; 3: spec confirmed; 5: host galaxy redshift
 
 # Search Efficiency file:
 # probability of detecting a source as a function of magnitude

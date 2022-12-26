@@ -1,6 +1,6 @@
 DOCUMENTATION:
   OVERVIEW:
-    TIME_START:   2022-10-03  05:28  # UT
+    TIME_START:   2022-11-23  03:56  # UT
     SURVEY:       DES
     GENMODEL:     SALT2.JLA-B14
     SNIA:         True
@@ -40,11 +40,11 @@ DOCUMENTATION:
     NEWMJD_DIF:              7.0000e-03  # day-sep if > 1 detections required
     SEARCHEFF_PIPELINE_EFF_FILE:  $SNDATA_ROOT/models/searcheff/SEARCHEFF_PIPELINE_DES.DAT
     SEARCHEFF_SPEC_FILE:     $SNDATA_ROOT/models/searcheff/SEARCHEFF_SPEC_DES_G10.TXT
-    SEARCHEFF_zHOST_FILE:    NONE
-    APPLY_SEARCHEFF_OPT:     2  # += 1,2,4 => pipe,spec,zhost
+    SEARCHEFF_zHOST_FILE:    $SNDATA_ROOT/sample_input_files/PS1_J17/SEARCHEFF_zHOST_PS1.DAT
+    APPLY_SEARCHEFF_OPT:     5  # += 1,2,4 => pipe,spec,zhost
 # Redshift inputs
-    GENRANGE_REDSHIFT:       0.0400  1.2000  
-    GENSIGMA_REDSHIFT:       5.0000e-04  
+    GENRANGE_REDSHIFT:       1.0000e-02  1.0000  
+    GENSIGMA_REDSHIFT:       1.0000e-03  
     GENSIGMA_VPEC:           0  # true vpec scatter (km/sec)
     VPEC_ERR:                0  # vpec error after correction (km/sec)
 # Epoch & sky coverage inputs
@@ -73,6 +73,7 @@ DOCUMENTATION:
     SIMGEN_DUMP:             9 CID Z PEAKMJD SALT2c SALT2x1 SNRMAX TRESTMIN TRESTMAX NON1A_INDEX 
 # CUTWIN inputs
     APPLY_CUTWIN_OPT:        1  
+    CUTWIN_NEPOCH:           5 -5. 
     CUTWIN_TRESTMIN:         -20 10 
     CUTWIN_TRESTMAX:         9 40 
     CUTWIN_MWEBV:            0 .20 
@@ -83,29 +84,28 @@ DOCUMENTATION:
   - Reported flux-uncertainty includes SKY+GALAXY+SOURCE
   - SB-dependent flux scatter is OFF
   -  POWERLAW RATE MODEL:  2.60e-05*(1+z)^2.20  (0.0 < z < 4.0) 
-  -     MODEL_RATE(z=0.04) = 2.834e-05/Mpc^3/yr    
-  -     MODEL_RATE(z=0.24) = 4.174e-05/Mpc^3/yr    
-  -     MODEL_RATE(z=0.44) = 5.799e-05/Mpc^3/yr    
-  -     MODEL_RATE(z=0.64) = 7.720e-05/Mpc^3/yr    
-  -     MODEL_RATE(z=0.84) = 9.944e-05/Mpc^3/yr    
-  -     MODEL_RATE(z=1.04) = 1.248e-04/Mpc^3/yr    
+  -     MODEL_RATE(z=0.01) = 2.658e-05/Mpc^3/yr    
+  -     MODEL_RATE(z=0.21) = 3.955e-05/Mpc^3/yr    
+  -     MODEL_RATE(z=0.41) = 5.537e-05/Mpc^3/yr    
+  -     MODEL_RATE(z=0.61) = 7.413e-05/Mpc^3/yr    
+  -     MODEL_RATE(z=0.81) = 9.591e-05/Mpc^3/yr    
   - H0 =  70.00 km/s/Mpc 
   - Omega_{M,L} =  0.300, 0.700     w0,wa = -1.00,0.000
-  - APPLY_SEARCHEFF_OPT=2 --> Require EFF(SPEC) 
+  - APPLY_SEARCHEFF_OPT=5 --> Require EFF(PIPELINE+zHOST) 
   - PIPELINE requires 2 detections among g+r+i+z (MJD dif > 0.0070 days) 
 # 
   OUTPUT_SUMMARY:
     RANDOM_SYNC: 
-    - List=1  FIRST=0.164924  LAST=0.703483   AVG(wrap) = 0.1 +_ 0.1 
-    - List=2  FIRST=0.330492  LAST=0.843277   AVG(wrap) = 0.2 +_ 0.1 
-    - List=3  FIRST=0.173596  LAST=0.478341   AVG(wrap) = 0.0 +_ 0.0 
+    - List=1  FIRST=0.164924  LAST=0.816292   AVG(wrap) = 0.3 +_ 0.3 
+    - List=2  FIRST=0.330492  LAST=0.794929   AVG(wrap) = 0.1 +_ 0.1 
+    - List=3  FIRST=0.173596  LAST=0.025684   AVG(wrap) = 0.0 +_ 0.0 
 # 
-    CPU_MINUTES:       1.5  
-    NGENLC_TOT:        71417    # (785/sec)
-    NGENLC_WRITE:      1000    # (11/sec)
+    CPU_MINUTES:       34.1  
+    NGENLC_TOT:        1446050    # (706/sec)
+    NGENLC_WRITE:      100000    # (49/sec)
     NGENSPEC_WRITE:    0  
-    EFF(SEARCH+CUTS):  0.0140 +-  0.0004
+    EFF(SEARCH+CUTS):  0.0692 +-  0.0002
     NGEN_PER_SEASON:   -0       # NSN(GEN) in GENRANGE(z,MJD,dOmega)
     NACC_PER_SEASON:   -0 +_ -0  # NSN(ACCEPT) after trigger+cuts
-    NREJECT:  [19724,0,0,  50343,350]   # [NEP<1,GENRANGE,PEAKMAG,  SEARCHEFF,CUTWIN] 
+    NREJECT:  [497904,0,0,  814298,33848]   # [NEP<5,GENRANGE,PEAKMAG,  SEARCHEFF,CUTWIN] 
 DOCUMENTATION_END:

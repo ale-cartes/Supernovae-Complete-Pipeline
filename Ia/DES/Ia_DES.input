@@ -15,7 +15,7 @@ GENSOURCE: RANDOM	# Monte Carlo simulations
 SIMLIB_FILE: $SNDATA_ROOT/simlib/DES/DES-SN5YR_DES_DIFFIMG.SIMLIB # parameters of the survey observations 
 # ($SNDATA_ROOT/SIMLIB)
 
-NGEN_LC: 1000	# number of SN light curves to generate
+NGEN_LC: 100000	# number of SN light curves to generate
 
 GENFILTERS: griz	# or griz, it depends on availability
 KCOR_FILE: $SNDATA_ROOT/kcor/DES/DES-SN3YR/kcor_DECam.fits	# K correction file ($SNDATA_ROOT/kcor)
@@ -31,15 +31,16 @@ GENRANGE_DECL: -360. 360.0
 GENRANGE_PEAKMJD: 56000.0 58000.0
 GENSIGMA_SEARCH_PEAKMJD: 1.0  # sigma-smearing for  SEARCH_PEAKMJD (days)
 
-GENRANGE_REDSHIFT: 0.04 1.2 # Pantheon+: 0.001 < z < 2.26
-GENSIGMA_REDSHIFT: 0.0005
+GENRANGE_REDSHIFT:  0.01  1.  # Pantheon+: 0.001 < z < 2.26
+GENSIGMA_REDSHIFT: 0.001
 
 DNDZ: POWERLAW 2.6E-5 2.2 # rate = 2.6E-5 * (1+z)^1.5 /yr/Mpc^3
 
 GENRANGE_TREST: -20.0 80.0 # rest epoch relative to peak (days)
 
 
-APPLY_SEARCHEFF_OPT: 2	# 1: pipeline detect; 2: spec confirmed; 3: both
+APPLY_SEARCHEFF_OPT: 5  #0: keep all SNe; 1: pipeline detect; 3: spec confirmed; 5: host galaxy redshift
+SEARCHEFF_zHOST_FILE: $SNDATA_ROOT/sample_input_files/PS1_J17/SEARCHEFF_zHOST_PS1.DAT
 
 # Search Efficiency file:
 # probability of detecting a source as a function of magnitude

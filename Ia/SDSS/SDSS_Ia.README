@@ -1,6 +1,6 @@
 DOCUMENTATION:
   OVERVIEW:
-    TIME_START:   2022-10-03  05:55  # UT
+    TIME_START:   2022-11-27  04:58  # UT
     SURVEY:       SDSS
     GENMODEL:     SALT2.JLA-B14
     SNIA:         True
@@ -40,11 +40,11 @@ DOCUMENTATION:
     NEWMJD_DIF:              7.0000e-03  # day-sep if > 1 detections required
     SEARCHEFF_PIPELINE_EFF_FILE:  $SNDATA_ROOT/models/searcheff/SEARCHEFF_PIPELINE_SDSS.DAT
     SEARCHEFF_SPEC_FILE:     $SNDATA_ROOT/models/searcheff/SEARCHEFF_SPEC_SDSS.DAT
-    SEARCHEFF_zHOST_FILE:    NONE
-    APPLY_SEARCHEFF_OPT:     2  # += 1,2,4 => pipe,spec,zhost
+    SEARCHEFF_zHOST_FILE:    $SNDATA_ROOT/sample_input_files/PS1_J17/SEARCHEFF_zHOST_PS1.DAT
+    APPLY_SEARCHEFF_OPT:     5  # += 1,2,4 => pipe,spec,zhost
 # Redshift inputs
-    GENRANGE_REDSHIFT:       0.0400  1.0000  
-    GENSIGMA_REDSHIFT:       5.0000e-04  
+    GENRANGE_REDSHIFT:       1.0000e-02  1.0000  
+    GENSIGMA_REDSHIFT:       1.0000e-03  
     GENSIGMA_VPEC:           0  # true vpec scatter (km/sec)
     VPEC_ERR:                0  # vpec error after correction (km/sec)
 # Epoch & sky coverage inputs
@@ -84,28 +84,28 @@ DOCUMENTATION:
   - Reported flux-uncertainty includes SKY+GALAXY+SOURCE
   - SB-dependent flux scatter is OFF
   -  POWERLAW RATE MODEL:  2.60e-05*(1+z)^2.20  (0.0 < z < 4.0) 
-  -     MODEL_RATE(z=0.04) = 2.834e-05/Mpc^3/yr    
-  -     MODEL_RATE(z=0.24) = 4.174e-05/Mpc^3/yr    
-  -     MODEL_RATE(z=0.44) = 5.799e-05/Mpc^3/yr    
-  -     MODEL_RATE(z=0.64) = 7.720e-05/Mpc^3/yr    
-  -     MODEL_RATE(z=0.84) = 9.944e-05/Mpc^3/yr    
+  -     MODEL_RATE(z=0.01) = 2.658e-05/Mpc^3/yr    
+  -     MODEL_RATE(z=0.21) = 3.955e-05/Mpc^3/yr    
+  -     MODEL_RATE(z=0.41) = 5.537e-05/Mpc^3/yr    
+  -     MODEL_RATE(z=0.61) = 7.413e-05/Mpc^3/yr    
+  -     MODEL_RATE(z=0.81) = 9.591e-05/Mpc^3/yr    
   - H0 =  70.00 km/s/Mpc 
   - Omega_{M,L} =  0.300, 0.700     w0,wa = -1.00,0.000
-  - APPLY_SEARCHEFF_OPT=2 --> Require EFF(SPEC) 
+  - APPLY_SEARCHEFF_OPT=5 --> Require EFF(PIPELINE+zHOST) 
   - PIPELINE requires 3 detections among gr+ri+gi (MJD dif > 0.0070 days) 
 # 
   OUTPUT_SUMMARY:
     RANDOM_SYNC: 
-    - List=1  FIRST=0.164924  LAST=0.243046   AVG(wrap) = 0.1 +_ 0.2 
-    - List=2  FIRST=0.330492  LAST=0.586268   AVG(wrap) = 0.0 +_ 0.1 
-    - List=3  FIRST=0.173596  LAST=0.721872   AVG(wrap) = 0.0 +_ 0.0 
+    - List=1  FIRST=0.164924  LAST=0.646807   AVG(wrap) = 0.0 +_ 0.1 
+    - List=2  FIRST=0.330492  LAST=0.378844   AVG(wrap) = 0.0 +_ 0.1 
+    - List=3  FIRST=0.173596  LAST=0.591170   AVG(wrap) = 0.0 +_ 0.0 
 # 
-    CPU_MINUTES:       7.1  
-    NGENLC_TOT:        1099159    # (2568/sec)
-    NGENLC_WRITE:      1000    # (2/sec)
+    CPU_MINUTES:       942.3  
+    NGENLC_TOT:        150434991    # (2661/sec)
+    NGENLC_WRITE:      100000    # (2/sec)
     NGENSPEC_WRITE:    0  
-    EFF(SEARCH+CUTS):  0.0009 +-  0.0000
+    EFF(SEARCH+CUTS):  0.0007 +-  0.0000
     NGEN_PER_SEASON:   -0       # NSN(GEN) in GENRANGE(z,MJD,dOmega)
     NACC_PER_SEASON:   -0 +_ -0  # NSN(ACCEPT) after trigger+cuts
-    NREJECT:  [998747,0,0,  99204,208]   # [NEP<5,GENRANGE,PEAKMAG,  SEARCHEFF,CUTWIN] 
+    NREJECT:  [136674214,0,0,  13639308,21469]   # [NEP<5,GENRANGE,PEAKMAG,  SEARCHEFF,CUTWIN] 
 DOCUMENTATION_END:
