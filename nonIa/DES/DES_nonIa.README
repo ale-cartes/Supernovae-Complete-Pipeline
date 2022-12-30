@@ -1,6 +1,6 @@
 DOCUMENTATION:
   OVERVIEW:
-    TIME_START:   2022-10-21  17:32  # UT
+    TIME_START:   2022-12-30  17:59  # UT
     SURVEY:       DES
     GENMODEL:     NON1A
     SNIA:         False
@@ -12,7 +12,7 @@ DOCUMENTATION:
     CWD:   /home/acartes/Desktop/Supernovae_Complete_Pipeline/nonIa/DES
     INPUT_FILE:
     - DES_nonIa.input
-    - $SNDATA_ROOT/models/NON1ASED/NON1ASED.P18_CC/SIMGEN_INCLUDE_NON1A.INPUT
+    - $SNDATA_ROOT/models/NON1ASED/NON1ASED.K10_CC/SIMGEN_INCLUDE_NON1A.INPUT
 # 
   INPUT_KEYS:
 # Output data
@@ -27,46 +27,49 @@ DOCUMENTATION:
     GENMODEL:                NON1A 
     NON1A_KEYS:              5 INDEX WGT MAGOFF MAGSMEAR SNTYPE 
     NON1A:                  
-    - 201 0.0207 1.300 0.740 20 
-    - 204 0.0207 1.300 0.740 20 
-    - 208 0.0207 1.300 0.740 20 
-    - 210 0.0207 1.300 0.740 20 
-    - 213 0.0207 1.300 0.740 20 
-    - 214 0.0207 1.300 0.740 20 
-    - 215 0.0207 1.300 0.740 20 
-    - 216 0.0207 1.300 0.740 20 
-    - 219 0.0207 1.300 0.740 20 
-    - 220 0.0207 1.300 0.740 20 
-    - 221 0.0207 1.300 0.740 20 
-    - 222 0.0207 1.300 0.740 20 
-    - 223 0.0207 1.300 0.740 20 
-    - 224 0.0207 1.300 0.740 20 
-    - 225 0.0207 1.300 0.740 20 
-    - 226 0.0207 1.300 0.740 20 
-    - 227 0.0207 1.300 0.740 20 
-    - 228 0.0207 1.300 0.740 20 
-    - 229 0.0207 1.300 0.740 20 
-    - 230 0.0207 1.300 0.740 20 
-    - 231 0.0207 1.300 0.740 20 
-    - 232 0.0207 1.300 0.740 20 
-    - 233 0.0207 1.300 0.740 20 
-    - 235 0.0207 1.300 0.740 20 
-    - 103 0.0200 -0.430 0.154 32 
-    - 104 0.0200 1.470 0.154 32 
-    - 105 0.0200 -1.828 0.154 32 
-    - 202 0.0200 -0.854 0.154 32 
-    - 203 0.0200 -1.299 0.154 32 
-    - 212 0.0200 -0.250 0.154 32 
-    - 234 0.0200 -0.919 0.154 32 
-    - 021 0.0167 0.280 0.414 33 
-    - 022 0.0167 0.280 0.414 33 
-    - 101 0.0167 0.280 0.414 33 
-    - 102 0.0167 0.280 0.414 33 
-    - 205 0.0167 0.280 0.414 33 
-    - 207 0.0167 0.280 0.414 33 
-    - 211 0.0167 0.280 0.414 33 
-    - 217 0.0167 0.280 0.414 33 
-    - 218 0.0167 0.280 0.414 33 
+    - 201 0.0246 2.100 1.050 20 
+    - 204 0.0246 2.100 1.050 20 
+    - 208 0.0246 2.100 1.050 20 
+    - 210 0.0246 2.100 1.050 20 
+    - 213 0.0246 2.100 1.050 20 
+    - 214 0.0246 2.100 1.050 20 
+    - 215 0.0246 2.100 1.050 20 
+    - 216 0.0246 2.100 1.050 20 
+    - 219 0.0246 2.100 1.050 20 
+    - 220 0.0246 2.100 1.050 20 
+    - 221 0.0246 2.100 1.050 20 
+    - 222 0.0246 2.100 1.050 20 
+    - 223 0.0246 2.100 1.050 20 
+    - 224 0.0246 2.100 1.050 20 
+    - 225 0.0246 2.100 1.050 20 
+    - 226 0.0246 2.100 1.050 20 
+    - 227 0.0246 2.100 1.050 20 
+    - 228 0.0246 2.100 1.050 20 
+    - 229 0.0246 2.100 1.050 20 
+    - 230 0.0246 2.100 1.050 20 
+    - 231 0.0246 2.100 1.050 20 
+    - 232 0.0246 2.100 1.050 20 
+    - 233 0.0246 2.100 1.050 20 
+    - 235 0.0246 2.100 1.050 20 
+    - 206 0.0200 1.500 1.500 21 
+    - 209 0.0200 1.500 1.500 21 
+    - 002 0.0800 -0.550 0.640 22 
+    - 103 0.0200 0.600 0.000 32 
+    - 104 0.0200 0.600 0.000 32 
+    - 105 0.0200 0.600 0.000 32 
+    - 202 0.0200 0.600 0.000 32 
+    - 203 0.0200 0.600 0.000 32 
+    - 212 0.0200 0.600 0.000 32 
+    - 234 0.0200 0.600 0.000 32 
+    - 021 0.0167 1.480 1.100 33 
+    - 022 0.0167 1.480 1.100 33 
+    - 101 0.0167 1.480 1.100 33 
+    - 102 0.0167 1.480 1.100 33 
+    - 205 0.0167 1.480 1.100 33 
+    - 207 0.0167 1.480 1.100 33 
+    - 211 0.0167 1.480 1.100 33 
+    - 217 0.0167 1.480 1.100 33 
+    - 218 0.0167 1.480 1.100 33 
     GENMAG_SMEAR:            1.0000e-03  # coherent scatter (mag)
 # Cosmology inputs
     OMEGA_MATTER:            0.3 
@@ -85,7 +88,7 @@ DOCUMENTATION:
     SEARCHEFF_PIPELINE_EFF_FILE:  $SNDATA_ROOT/models/searcheff/SEARCHEFF_PIPELINE_DES.DAT
     SEARCHEFF_SPEC_FILE:     NONE
     SEARCHEFF_zHOST_FILE:    NONE
-    APPLY_SEARCHEFF_OPT:     1  # += 1,2,4 => pipe,spec,zhost
+    APPLY_SEARCHEFF_OPT:     3  # += 1,2,4 => pipe,spec,zhost
 # Redshift inputs
     GENRANGE_REDSHIFT:       0.0400  1.0000  
     GENSIGMA_REDSHIFT:       0.0500  
@@ -121,21 +124,21 @@ DOCUMENTATION:
   -     MODEL_RATE(z=0.84) = 9.944e-05/Mpc^3/yr    
   - H0 =  70.00 km/s/Mpc 
   - Omega_{M,L} =  0.300, 0.700     w0,wa = -1.00,0.000
-  - APPLY_SEARCHEFF_OPT=1 --> Require EFF(PIPELINE) 
+  - APPLY_SEARCHEFF_OPT=3 --> Require EFF(PIPELINE+SPEC) 
   - PIPELINE requires 2 detections among g+r+i+z (MJD dif > 0.0070 days) 
 # 
   OUTPUT_SUMMARY:
     RANDOM_SYNC: 
-    - List=1  FIRST=0.164924  LAST=0.144049   AVG(wrap) = 0.1 +_ 0.2 
-    - List=2  FIRST=0.330492  LAST=0.423907   AVG(wrap) = 0.0 +_ 0.1 
-    - List=3  FIRST=0.173596  LAST=0.559522   AVG(wrap) = 0.0 +_ 0.0 
+    - List=1  FIRST=0.164924  LAST=0.086234   AVG(wrap) = 0.1 +_ 0.2 
+    - List=2  FIRST=0.330492  LAST=0.690274   AVG(wrap) = 0.0 +_ 0.1 
+    - List=3  FIRST=0.173596  LAST=0.170746   AVG(wrap) = 0.0 +_ 0.0 
 # 
-    CPU_MINUTES:       42.2  
-    NGENLC_TOT:        2072509    # (819/sec)
-    NGENLC_WRITE:      10000    # (4/sec)
+    CPU_MINUTES:       82.5  
+    NGENLC_TOT:        4140073    # (836/sec)
+    NGENLC_WRITE:      10000    # (2/sec)
     NGENSPEC_WRITE:    0  
-    EFF(SEARCH+CUTS):  0.0048 +-  0.0000
+    EFF(SEARCH+CUTS):  0.0024 +-  0.0000
     NGEN_PER_SEASON:   -0       # NSN(GEN) in GENRANGE(z,MJD,dOmega)
     NACC_PER_SEASON:   -0 +_ -0  # NSN(ACCEPT) after trigger+cuts
-    NREJECT:  [1746045,0,0,  314618,1846]   # [NEP<1,GENRANGE,PEAKMAG,  SEARCHEFF,CUTWIN] 
+    NREJECT:  [3489710,0,0,  638313,2050]   # [NEP<1,GENRANGE,PEAKMAG,  SEARCHEFF,CUTWIN] 
 DOCUMENTATION_END:

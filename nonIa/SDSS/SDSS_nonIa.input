@@ -6,14 +6,14 @@ GENVERSION: SDSS_nonIa  # Name of the simulation
 # NON1A
 # ======
 GENMODEL: NON1A
-INPUT_FILE_INCLUDE: $SNDATA_ROOT/models/NON1ASED/NON1ASED.P18_CC/SIMGEN_INCLUDE_NON1A.INPUT
+INPUT_FILE_INCLUDE: $SNDATA_ROOT/models/NON1ASED/NON1ASED.K10_CC/SIMGEN_INCLUDE_NON1A.INPUT
 
 GENSOURCE: RANDOM  # Monte Carlo simulations
 
 SIMLIB_FILE:  $SNDATA_ROOT/simlib/SDSS/SDSS_3year.SIMLIB # parameters of the survey observations 
 # ($SNDATA_ROOT/SIMLIB)
 
-NGEN_LC: 100 # number of SN light curves to generate
+NGEN_LC: 10000 # number of SN light curves to generate
 
 
 
@@ -40,7 +40,7 @@ DNDZ:  POWERLAW 2.6E-5 2.2 # rate = 2.6E-5 * (1+z)^1.5 /yr/Mpc^3
 GENRANGE_TREST: -20  80.0  # rest epoch relative to peak (days)
 
 
-APPLY_SEARCHEFF_OPT: 2  # 1: pipeline detect; 2: spec confirmed; 3: both
+APPLY_SEARCHEFF_OPT: 3 #0: keep all SNe; 1: pipeline detect; 3: spec confirmed; 5: host galaxy redshift
 
 # Search Efficiency file:
 # probability of detecting a source as a function of magnitude
@@ -51,7 +51,7 @@ SEARCHEFF_PIPELINE_FILE: $SNDATA_ROOT/models/searcheff/SEARCHEFF_PIPELINE_SDSS.D
 SEARCHEFF_PIPELINE_LOGIC_FILE: $SNDATA_ROOT/models/searcheff/SEARCHEFF_PIPELINE_LOGIC.DAT
 
 # human/spectroscopic efficiency (default ϵ_spec=1)
-# SEARCHEFF_SPEC_FILE: $SNDATA_ROOT/models/searcheff/SEARCHEFF_SPEC_DES_G10.TXT
+SEARCHEFF_SPEC_FILE: $SNDATA_ROOT/models/searcheff/SEARCHEFF_SPEC_DES_G10.TXT
 
 
 OPT_MEWEBV: 1  # simulate galactic extinction from values in SIMLIB file

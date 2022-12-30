@@ -6,14 +6,14 @@ GENVERSION: DES_nonIa  # Name of the simulation
 # NON1A
 # ======
 GENMODEL: NON1A
-INPUT_FILE_INCLUDE: $SNDATA_ROOT/models/NON1ASED/NON1ASED.P18_CC/SIMGEN_INCLUDE_NON1A.INPUT
+INPUT_FILE_INCLUDE: $SNDATA_ROOT/models/NON1ASED/NON1ASED.K10_CC/SIMGEN_INCLUDE_NON1A.INPUT
 
 GENSOURCE: RANDOM  # Monte Carlo simulations
 
 SIMLIB_FILE:  $SNDATA_ROOT/simlib/DES/DES-SN5YR_DES_DIFFIMG.SIMLIB # parameters of the survey observations 
 # ($SNDATA_ROOT/SIMLIB)
 
-NGEN_LC: 100000 # number of SN light curves to generate
+NGEN_LC: 10000 # number of SN light curves to generate
 
 
 
@@ -40,7 +40,7 @@ DNDZ:  POWERLAW 2.6E-5 2.2 # rate = 2.6E-5 * (1+z)^1.5 /yr/Mpc^3
 GENRANGE_TREST: -20  80.0  # rest epoch relative to peak (days)
 
 
-APPLY_SEARCHEFF_OPT: 3 #0: keep all SNe; 1: pipeline detect; 3: spec confirmed; 5: host galaxy redshift
+APPLY_SEARCHEFF_OPT: 0 #0: keep all SNe; 1: pipeline detect; 3: spec confirmed; 5: host galaxy redshift
 
 # Search Efficiency file:
 # probability of detecting a source as a function of magnitude
