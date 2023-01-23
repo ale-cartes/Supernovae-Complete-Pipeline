@@ -79,33 +79,32 @@ def mjd_to_days(lightcurve, specific_obs=None, inplace=False, output=False):
     =====
     lightcurve: lightcurve data frame
 
-    inplace: bool (optional)
-    if inplace is True, the function adds a new column to the
-    dataFrame labeled as "Days"
-
     specific_obs: None or int (optional)
     if it is None, days will be calculted for all data in Data Frame
+
+    inplace: bool (optional)
+    if inplace is True, the function adds a new column labeled as "Days" 
+    to the dataFrame
 
     output: bool (optional)
     if it's True, an array of days will be returned
     """
-    n = (lightcurve.obs).max()
-    iterator = range(1, n+1)
 
     if type(specific_obs) == int:
-        iterator = [specific_obs]
         lightcurve = lightcurve[lightcurve.obs == specific_obs]
 
-    days = []
-    for obs in iterator:
-        mjd_obs = (lightcurve[lightcurve.obs == obs].MJD).values
-        days.append(mjd_obs - mjd_obs[0])
+    min_MJD = lightcurve.groupby('obs').MJD.min()
+
+    def row_day_calc(row):
+        i = row.obs
+        day = row.MJD - min_MJD[i]
+        return day
 
     if inplace and ("Days" not in lightcurve.columns):
-        lightcurve['Days'] = np.concatenate(days)
+        lightcurve['Days'] = lightcurve.apply(row_day_calc, axis=1)
 
     if output:
-        return np.concatenate(days)
+        return lightcurve.apply(row_day_calc, axis=1).to_numpy()
 
 
 def plotter(data_frame, obs, summary=None, days=False):
