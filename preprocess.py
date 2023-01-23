@@ -20,4 +20,7 @@ Ia_DES_curves['Type'] = ['Ia'] * Ia_DES_curves.shape[0]
 
 columns = ['obs', 'MJD', 'Days',
            'BAND', 'FLUXCAL', 'FLUXCALERR', 'Type']
-curves = pd.concat((Ia_DES_curves, nonIa_DES_curves))[columns]
+curves = pd.concat((Ia_DES_curves[columns], 
+                    nonIa_DES_curves[columns]))
+
+del Ia_DES_curves, nonIa_DES_curves  # free-up memory

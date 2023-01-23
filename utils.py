@@ -83,7 +83,7 @@ def mjd_to_days(lightcurve, specific_obs=None, inplace=False, output=False):
     if it is None, days will be calculted for all data in Data Frame
 
     inplace: bool (optional)
-    if inplace is True, the function adds a new column labeled as "Days" 
+    if inplace is True, the function adds a new column labeled as "Days"
     to the dataFrame
 
     output: bool (optional)
@@ -149,11 +149,18 @@ def plotter(data_frame, obs, summary=None, days=False):
 
     ax.set_xlabel(xlabel)
     ax.set_ylabel('Flux (ADU)')
-    ax.set_title(f'{data_frame.name}, obs: {obs}')
+
+    try:
+        name = data_frame.name
+    except Exception:
+        name = ''
+
+    ax.set_title(f'{name}, obs: {obs}')
     if not isinstance(summary, type(None)):
-        ax.set_title(rf"{data_frame.name}, " +
+        summ_obs = summary.query('CID == @obs')
+        ax.set_title(rf"{name}, " +
                      rf"obs: {obs}, " +
-                     rf"peak: {summary['PEAKMJD'].values[0]}, " +
-                     rf"SN type: {summary['SNTYPE'].values[0]}")
+                     rf"peak: {summ_obs['PEAKMJD'].values[0]}, " +
+                     rf"SN type: {summ_obs['SNTYPE'].values[0]}")
     ax.legend()
     plt.show()
