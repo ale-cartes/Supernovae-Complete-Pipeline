@@ -1,6 +1,6 @@
 DOCUMENTATION:
   OVERVIEW:
-    TIME_START:   2023-01-04  17:42  # UT
+    TIME_START:   2023-01-20  22:08  # UT
     SURVEY:       DES
     GENMODEL:     NON1A
     SNIA:         False
@@ -9,7 +9,7 @@ DOCUMENTATION:
     SNDATA_ROOT:  /home/acartes/Documents/SNDATA_ROOT
     SNANA_DIR:     /home/acartes/Documents/SNANA
     SNANA_VERSION: v11_04m
-    CWD:   /home/acartes/Desktop/Supernovae_Complete_Pipeline/nonIa/DES
+    CWD:   /home/acartes/Desktop/Supernovae_Complete_Pipeline/Lightcurves/nonIa/DES
     INPUT_FILE:
     - DES_nonIa.input
     - $SNDATA_ROOT/models/NON1ASED/NON1ASED.K10_CC/SIMGEN_INCLUDE_NON1A.INPUT
@@ -88,7 +88,7 @@ DOCUMENTATION:
     SEARCHEFF_PIPELINE_EFF_FILE:  $SNDATA_ROOT/models/searcheff/SEARCHEFF_PIPELINE_DES.DAT
     SEARCHEFF_SPEC_FILE:     NONE
     SEARCHEFF_zHOST_FILE:    NONE
-    APPLY_SEARCHEFF_OPT:     0  # += 1,2,4 => pipe,spec,zhost
+    APPLY_SEARCHEFF_OPT:     1  # += 1,2,4 => pipe,spec,zhost
 # Redshift inputs
     GENRANGE_REDSHIFT:       0.0400  1.0000  
     GENSIGMA_REDSHIFT:       0.0500  
@@ -125,21 +125,21 @@ DOCUMENTATION:
   -     MODEL_RATE(z=0.84) = 9.944e-05/Mpc^3/yr    
   - H0 =  70.00 km/s/Mpc 
   - Omega_{M,L} =  0.300, 0.700     w0,wa = -1.00,0.000
-  - APPLY_SEARCHEFF_OPT=0 --> No trigger requirements 
+  - APPLY_SEARCHEFF_OPT=1 --> Require EFF(PIPELINE) 
   - PIPELINE requires 2 detections among g+r+i+z (MJD dif > 0.0070 days) 
 # 
   OUTPUT_SUMMARY:
     RANDOM_SYNC: 
-    - List=1  FIRST=0.164924  LAST=0.447296   AVG(wrap) = 0.1 +_ 0.2 
-    - List=2  FIRST=0.330492  LAST=0.097014   AVG(wrap) = 0.0 +_ 0.1 
-    - List=3  FIRST=0.173596  LAST=0.508193   AVG(wrap) = 0.0 +_ 0.0 
+    - List=1  FIRST=0.164924  LAST=0.119727   AVG(wrap) = 0.1 +_ 0.2 
+    - List=2  FIRST=0.330492  LAST=0.538259   AVG(wrap) = 0.0 +_ 0.1 
+    - List=3  FIRST=0.173596  LAST=0.047054   AVG(wrap) = 0.0 +_ 0.0 
 # 
-    CPU_MINUTES:       647.2  
-    NGENLC_TOT:        12733261    # (328/sec)
-    NGENLC_WRITE:      10000    # (0/sec)
+    CPU_MINUTES:       2538.7  
+    NGENLC_TOT:        128995224    # (847/sec)
+    NGENLC_WRITE:      100000    # (1/sec)
     NGENSPEC_WRITE:    0  
     EFF(SEARCH+CUTS):  0.0008 +-  0.0000
     NGEN_PER_SEASON:   -0       # NSN(GEN) in GENRANGE(z,MJD,dOmega)
     NACC_PER_SEASON:   -0 +_ -0  # NSN(ACCEPT) after trigger+cuts
-    NREJECT:  [10735279,0,0,  0,1987982]   # [NEP<1,GENRANGE,PEAKMAG,  SEARCHEFF,CUTWIN] 
+    NREJECT:  [108745604,0,0,  19850876,298744]   # [NEP<1,GENRANGE,PEAKMAG,  SEARCHEFF,CUTWIN] 
 DOCUMENTATION_END:
