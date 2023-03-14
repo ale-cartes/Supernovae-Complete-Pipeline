@@ -52,10 +52,10 @@ def summary(dump_file):
     data = pd.read_csv(dump_file, delimiter=' ', header=5)
     data.drop(data.columns[[0, 1]], axis=1, inplace=True)
 
-    type_map = {1: 'Ia', 
+    type_map = {1: 'Ia',
                 20: 'II+IIP', 21: 'IIn+IIN', 22: 'IIL',
                 32: 'Ib', 33: 'Ic+Ibc'}
-    
+
     data['SNTYPE'] = data['SNTYPE'].replace(type_map)
 
     return data
