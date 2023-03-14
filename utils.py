@@ -45,27 +45,18 @@ def reader(file_name, fits_header=False):
 
 
 def summary(dump_file):
+    """
+    Function that reads a CSV file containing supernova
+    data and sumarizes the SNTYPE column
+    """
     data = pd.read_csv(dump_file, delimiter=' ', header=5)
     data.drop(data.columns[[0, 1]], axis=1, inplace=True)
 
-    for i, type in enumerate(data['SNTYPE']):
-        if type == 20:
-            data.at[i, 'SNTYPE'] = "II+IIP"
-
-        elif type == 21:
-            data.at[i, 'SNTYPE'] = "IIn+IIN"
-
-        elif type == 22:
-            data.at[i, 'SNTYPE'] = "IIL"
-
-        elif type == 32:
-            data.at[i, 'SNTYPE'] = "Ib"
-
-        elif type == 33:
-            data.at[i, 'SNTYPE'] = "Ic+Ibc"
-
-        elif type == 1:
-            data.at[i, 'SNTYPE'] = "Ia"
+    type_map = {1: 'Ia', 
+                20: 'II+IIP', 21: 'IIn+IIN', 22: 'IIL',
+                32: 'Ib', 33: 'Ic+Ibc'}
+    
+    data['SNTYPE'] = data['SNTYPE'].replace(type_map)
 
     return data
 
@@ -93,18 +84,15 @@ def mjd_to_days(lightcurve, specific_obs=None, inplace=False, output=False):
     if type(specific_obs) == int:
         lightcurve = lightcurve[lightcurve.obs == specific_obs]
 
-    min_MJD = lightcurve.groupby('obs').MJD.min()
+    min_MJD = lightcurve.groupby('obs').MJD.transform('min')
 
-    def row_day_calc(row):
-        i = row.obs
-        day = row.MJD - min_MJD[i]
-        return day
+    days = lightcurve.MJD - min_MJD
 
     if inplace and ("Days" not in lightcurve.columns):
-        lightcurve['Days'] = lightcurve.apply(row_day_calc, axis=1)
+        lightcurve['Days'] = days
 
     if output:
-        return lightcurve.apply(row_day_calc, axis=1).to_numpy()
+        return days.to_numpy()
 
 
 def plotter(data_frame, obs, summary=None, days=False):
