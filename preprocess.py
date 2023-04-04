@@ -1,5 +1,6 @@
 import os
 from utils import *
+from scipy.interpolate import splrep, splev
 
 path = os.getcwd()
 
@@ -34,7 +35,47 @@ nonIa_DES_curves.obs += max(Ia_DES_curves.obs)
 nonIa_DES_curves['Type'] = [0] * nonIa_DES_curves.shape[0]
 Ia_DES_curves['Type'] = [1] * Ia_DES_curves.shape[0]
 
+# merging Ia-nonIa data
 columns = ['obs', 'MJD', 'Days', 'BAND', 'FLUXCAL', 'FLUXCALERR', 'Type']
-curves = pd.concat((Ia_DES_curves[columns], nonIa_DES_curves[columns]))
+curves_nonfiltered = pd.concat((Ia_DES_curves[columns],
+                                nonIa_DES_curves[columns]))
 
-del Ia_DES_curves, nonIa_DES_curves  # free-up memory
+
+# discard light curves with few observations in a band
+min_obs = 5
+curves_nonfilt_group = curves_nonfiltered.groupby('obs')
+curves_band_counts = curves_nonfilt_group.BAND.value_counts()
+
+obs_discard = []
+for obs in curves_nonfiltered.obs.unique():
+    if not (curves_band_counts[obs] > min_obs).all():
+        obs_discard.append(obs)
+
+curves = curves_nonfiltered[~curves_nonfiltered.obs.isin(obs_discard)]
+
+# fitting curves using B-splines
+bands = ['g ', 'r ', 'i ', 'z ']
+curves_group = curves.groupby('obs')
+dict_curves_fitted = {}
+
+for obs, curve in curves_group:
+    x_new = np.linspace(curve.Days.min(), curve.Days.max(), 100)
+    dict_curve_fitted = {"Days": x_new}
+
+    for band in bands:
+        x = curve[curve.BAND == band].Days
+        y = curve[curve.BAND == band].FLUXCAL
+        yerr = curve[curve.BAND == band].FLUXCALERR
+
+        spl = splrep(x, y, w=1/yerr, k=min_obs)
+
+        y_new = splev(x_new, spl)
+
+        dict_curve_fitted[band] = y_new
+    
+    dict_curves_fitted[obs] = dict_curve_fitted
+
+curves_fitted = pd.DataFrame(dict_curves_fitted).transpose()
+
+
+# del Ia_DES_curves, nonIa_DES_curves  # free-up memory
