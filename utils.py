@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from astropy.table import Table
 from astropy.io import fits
+from scipy.interpolate import splrep, splev
+import itertools
 
 
 def reader(file_name, fits_header=False):
@@ -128,6 +130,19 @@ def peakmjd_to_days(lightcurve, dump_file, specific_obs=None, inplace=False,
         return days.to_numpy()
 
 
+def fitter_Bspline(curve, band, t_ev, order=3, w_power=1):
+    curve_band = curve[curve.BAND == band]
+
+    time = curve_band.Days
+    flux = curve_band.FLUXCAL
+    fluxerr = curve_band.FLUXCALERR
+
+    spl = splrep(time, flux, w=1/(fluxerr ** w_power), k=order)
+    flux_fit = splev(t_ev, spl)
+
+    return flux_fit
+
+
 def plotter(data_frame, obs, summary=None, days=False, dump=None):
     """
     Function that plots supernova lightcurve
@@ -186,4 +201,38 @@ def plotter(data_frame, obs, summary=None, days=False, dump=None):
                      rf"peak: {summ_obs['PEAKMJD'].values[0]}, " +
                      rf"SN type: {summ_obs['SNTYPE'].values[0]}")
     ax.legend()
-    plt.show()
+    
+    return fig, ax
+
+
+def plot_confusion_matrix(cm, classes,
+                          normalize=False,
+                          title='Confusion matrix',
+                          cmap=plt.cm.Blues):
+    """
+    This function prints and plots the confusion matrix.
+    Normalization can be applied by setting `normalize=True`.
+    """
+    if normalize:
+        cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+        print("Normalized confusion matrix")
+    else:
+        print('Confusion matrix, without normalization')
+
+    plt.imshow(cm, interpolation='nearest', cmap=cmap)
+    plt.title(title)
+    plt.colorbar()
+    tick_marks = np.arange(len(classes))
+    plt.xticks(tick_marks, classes, rotation=45)
+    plt.yticks(tick_marks, classes)
+
+    fmt = '.2f' if normalize else 'd'
+    thresh = cm.max() / 2.
+    for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
+        plt.text(j, i, format(cm[i, j], fmt),
+                 horizontalalignment="center",
+                 color="white" if cm[i, j] > thresh else "black")
+
+    plt.tight_layout()
+    plt.ylabel('True label')
+    plt.xlabel('Predicted label')

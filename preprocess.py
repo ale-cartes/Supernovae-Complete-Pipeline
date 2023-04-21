@@ -1,6 +1,5 @@
 import os
 from utils import *
-from scipy.interpolate import splrep, splev
 
 path = os.getcwd()
 
@@ -31,15 +30,10 @@ peakmjd_to_days(nonIa_DES_curves, nonIa_dump, inplace=True, output=False)
 # add nonIa as new observations
 nonIa_DES_curves.obs += max(Ia_DES_curves.obs)
 
-# one-hot encoder: 1 -> Ia, 0 -> nonIa
-nonIa_DES_curves['Type'] = [0] * nonIa_DES_curves.shape[0]
-Ia_DES_curves['Type'] = [1] * Ia_DES_curves.shape[0]
-
 # merging Ia-nonIa data
-columns = ['obs', 'MJD', 'Days', 'BAND', 'FLUXCAL', 'FLUXCALERR', 'Type']
+columns = ['obs', 'MJD', 'Days', 'BAND', 'FLUXCAL', 'FLUXCALERR']
 curves_nonfiltered = pd.concat((Ia_DES_curves[columns],
                                 nonIa_DES_curves[columns]))
-
 
 # discard light curves with few observations in a band
 min_obs = 5
@@ -59,23 +53,25 @@ curves_group = curves.groupby('obs')
 dict_curves_fitted = {}
 
 for obs, curve in curves_group:
-    x_new = np.linspace(curve.Days.min(), curve.Days.max(), 100)
-    dict_curve_fitted = {"Days": x_new}
+    t_ev = np.linspace(curve.Days.min(), curve.Days.max(), 100)
+    dict_curve_fitted = {"Days": t_ev}
 
     for band in bands:
-        x = curve[curve.BAND == band].Days
-        y = curve[curve.BAND == band].FLUXCAL
-        yerr = curve[curve.BAND == band].FLUXCALERR
-
-        spl = splrep(x, y, w=1/yerr, k=min_obs)
-
-        y_new = splev(x_new, spl)
-
-        dict_curve_fitted[band] = y_new
+        flux_fitted = fitter_Bspline(curve, band, t_ev, order=min_obs)
+        dict_curve_fitted[band] = flux_fitted
     
     dict_curves_fitted[obs] = dict_curve_fitted
 
 curves_fitted = pd.DataFrame(dict_curves_fitted).transpose()
 
+# one-hot encoder: 1 -> Ia, 0 -> nonIa
+Type = []
+for obs in curves_fitted.index:
+    if obs <= 100_000:
+        Type.append(1)
+    else:
+        Type.append(0)
 
-# del Ia_DES_curves, nonIa_DES_curves  # free-up memory
+curves_fitted['Type'] = Type
+
+del Ia_DES_curves, nonIa_DES_curves  # free-up memory
