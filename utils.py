@@ -4,6 +4,7 @@ import pandas as pd
 from astropy.table import Table
 from astropy.io import fits
 from scipy.interpolate import splrep, splev
+from sklearn.metrics import confusion_matrix, roc_curve, auc
 import itertools
 
 
@@ -15,7 +16,7 @@ def reader(file_name, fits_header=False):
     Input
     ------
     file_name: str
-    fits file name
+      fits file name
     """
 
     if fits_header:
@@ -44,6 +45,12 @@ def summary(dump_file):
     """
     Function that reads a CSV file containing supernova
     data and sumarizes the SNTYPE column
+
+    Input
+    =====
+
+    dump_file: str
+      dump_file's name
     """
     data = pd.read_csv(dump_file, delimiter=' ', header=5, usecols=[11])
 
@@ -63,17 +70,18 @@ def mjd_to_days(lightcurve, specific_obs=None, inplace=False, output=False):
 
     Input
     =====
-    lightcurve: lightcurve data frame
+    lightcurve: pd.dataFrame
+      lightcurve data frame
 
     specific_obs: None or int (optional)
-    if it is None, days will be calculted for all data in Data Frame
+      if it is None, days will be calculted for all data in Data Frame
 
     inplace: bool (optional)
-    if inplace is True, the function adds a new column labeled as "Days"
-    to the dataFrame
+      if inplace is True, the function adds a new column labeled as "Days"
+      to the dataFrame
 
     output: bool (optional)
-    if it's True, an array of days will be returned
+      if it's True, an array of days will be returned
     """
 
     if type(specific_obs) == int:
@@ -98,19 +106,21 @@ def peakmjd_to_days(lightcurve, dump_file, specific_obs=None, inplace=False,
 
     Input
     =====
-    lightcurve: lightcurve data frame
+    lightcurve: pd.dataFrame
+      lightcurve data frame
 
-    dump_file: file that contains the moment of the peak
+    dump_file: str
+      name of the file that contains the moment of the peak
 
     specific_obs: None or int (optional)
-    if it is None, days will be calculted for all data in Data Frame
+      if it is None, days will be calculted for all data in Data Frame
 
     inplace: bool (optional)
-    if inplace is True, the function adds a new column labeled as "Days"
-    to the dataFrame
+      if inplace is True, the function adds a new column labeled as "Days"
+      to the dataFrame
 
     output: bool (optional)
-    if it's True, an array of days will be returned
+      if it's True, an array of days will be returned
     """
 
     data = pd.read_csv(dump_file, delimiter=' ', header=5, usecols=[2, 4],
@@ -131,6 +141,21 @@ def peakmjd_to_days(lightcurve, dump_file, specific_obs=None, inplace=False,
 
 
 def fitter_Bspline(curve, band, t_ev, order=3, w_power=1):
+    """
+    Function that interpolate data using B-splines and then
+    evaluates it at a specific time
+
+    Input
+    =====
+    curve: pd.dataFrame
+      light curve data Frame
+    
+    band: str
+      band of observation to be interpolated
+    
+    t_ev: np.array
+      time at which the B-spline is evaluated
+    """
     curve_band = curve[curve.BAND == band]
 
     time = curve_band.Days
@@ -149,14 +174,17 @@ def plotter(data_frame, obs, summary=None, days=False, dump=None):
 
     Input
     =====
-    data_frame: df with all supernovae data
-    obs: observation number
+    data_frame: pd.dataFrame
+      df with all supernovae data
 
-    summary (optional): None or path to file with
-    information related to nonIa supernovae (.DUMP)
+    obs: int
+      observation number
+
+    summary (optional): None or str
+      path to file with information related to nonIa supernovae (.DUMP)
 
     days (optional): bool
-    if it's True, MJD will be expressed as days
+      if it's True, MJD will be expressed as days
     """
     data_obs = data_frame[data_frame['obs'] == obs]
     xlabel = 'MJD'
@@ -205,14 +233,28 @@ def plotter(data_frame, obs, summary=None, days=False, dump=None):
     return fig, ax
 
 
-def plot_confusion_matrix(cm, classes,
+def plot_confusion_matrix(test_data, pred_data, classes,
                           normalize=False,
                           title='Confusion matrix',
                           cmap=plt.cm.Blues):
     """
-    This function prints and plots the confusion matrix.
-    Normalization can be applied by setting `normalize=True`.
+    Function that plots the Confusion Matrix given the testing
+    and predicted data.
+
+    Input
+    =====
+    test_data: np.array
+      True labels from test set
+    
+    pred_data: np.array
+      Predicted labels from the model
+    
+    normalize: bool (optional)
+      if True, the confusion matrix will be normalized. Defaulte is False
     """
+
+    cm = confusion_matrix(test_data, pred_data, labels=[1, 0])
+
     if normalize:
         cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
         print("Normalized confusion matrix")
@@ -236,3 +278,32 @@ def plot_confusion_matrix(cm, classes,
     plt.tight_layout()
     plt.ylabel('True label')
     plt.xlabel('Predicted label')
+
+
+def plot_roc_curve(test_data, pred_data, auc_print=False):
+  """
+  Function that plots the ROC curve given the testing
+  and predicted data
+
+  Input
+  =====
+  test_data: np.array
+    True labels from test set
+    
+  pred_data: np.array
+    Predicted labels from the model
+  
+  auc_print: bool (optional)
+    if it is True, AUC will be printed
+  """
+  fpr, tpr, threshold = roc_curve(test_data, pred_data)
+
+  if auc_print:
+    print(f'AUC = {auc(fpr, tpr)}')
+  
+  plt.figure()
+  plt.plot([0, 1], [0, 1], 'r--')
+  plt.plot(fpr, tpr, marker='.')
+  plt.xlabel('False Positive rate')
+  plt.ylabel('True Positive rate')
+  plt.title('ROC Curve')
