@@ -73,5 +73,3 @@ for obs in curves_fitted.index:
         Type.append(0)
 
 curves_fitted['Type'] = Type
-
-del Ia_DES_curves, nonIa_DES_curves  # free-up memory
