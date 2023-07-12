@@ -1,9 +1,12 @@
 import os
 from utils import *
 
-aug_input = (input("Do data augmentation? [y/n]") == 'y')
-save_input = (input("save data? [y/n]") == 'y')
+# requesting for data augmentation and save it
+normalize = (input("Do data normalization?[y/n] ") == 'y')
+aug_input = (input("Do data augmentation? [y/n] ") == 'y')
+save_input = (input("save data? [y/n] ") == 'y')
 
+# searching for files and folders
 path = os.getcwd()
 
 folder = 'Supernovae-Complete-Pipeline'
@@ -19,9 +22,12 @@ nonIa_summary = summary(nonIa_dump)
 
 print('nonIa types:', nonIa_summary.value_counts(), sep='\n')
 
+# preprocess the data
 if aug_input:
-    Ia_fitted = curves_augmentation(preprocess(Ia_DES_file, Ia_dump))
-    nonIa_fitted = curves_augmentation(preprocess(nonIa_DES_file, nonIa_dump))
+    Ia_fitted = curves_augmentation(preprocess(Ia_DES_file, Ia_dump,
+                                               normalize=normalize))
+    nonIa_fitted = curves_augmentation(preprocess(nonIa_DES_file, nonIa_dump,
+                                                  normalize=normalize))
 
 else:
     Ia_fitted = preprocess(Ia_DES_file, Ia_dump)
@@ -34,15 +40,24 @@ curves_fitted = replace_nan_array(curves_fitted)
 Type = [1 if j < len(Ia_fitted) else 0 for j in range(len(curves_fitted))]
 curves_fitted['Type'] = Type
 
+# give Neural Network format to the data
 curves_RNN, types_RNN = RNN_reshape(curves_fitted)
 
+# save the data
 if save_input:
-    file_RNN = 'curves_RNN_fitted.npy'
-    file_types_RNN = 'types_RNN.npy'
+    file_name = 'curves_RNN'
+    file_types = 'types_RNN'
+
+    if normalize:
+        file_name += '_norm'
+        file_types += '_norm'
 
     if aug_input:
-        file_RNN = 'curves_RNN_aug.npy'
-        file_types_RNN = 'types_RNN_aug.npy'
+        file_name += '_aug'
+        file_types += '_aug'
+    
+    file_name += '.npy'
+    file_types += '.npy'
 
-    np.save(file_RNN, curves_RNN)
-    np.save(file_types_RNN, types_RNN)
+    np.save(file_name, curves_RNN)
+    np.save(file_types, types_RNN)

@@ -18,6 +18,12 @@ def reader(file_name, fits_header=False, band='BAND'):
     ------
     file_name: str
         fits file name
+    
+    fits_header: bool
+        if it is True, the header will be printed
+    
+    band: str (optional)
+        name of the column related to the filter used for observation
     """
 
     if fits_header:
@@ -149,13 +155,19 @@ def fitter_Bspline(curve, band, t_ev, order=3, w_power=1):
     Input
     =====
     curve: pd.dataFrame
-      light curve data Frame
+        light curve data Frame
 
     band: str
-      band of observation to be interpolated
+        band of observation to be interpolated
 
     t_ev: np.array
-      time at which the B-spline is evaluated
+        time at which the B-spline is evaluated
+
+    order: int (optional)
+        order of the spline
+    
+    w_power: 1
+        power of the weight applicated to the incerteinty related to the fluxes
     """
     curve_band = curve[curve.BAND == band]
 
@@ -171,7 +183,22 @@ def fitter_Bspline(curve, band, t_ev, order=3, w_power=1):
 
 def preprocess(curves_file, dump_file=None, min_obs=5, normalize=False):
     """
+    Function that interpolates light curves, discarding curves that contain
+    less than a certain amount of observation.
+
+    Input
+    =====
+    curves_file: str
+        name of the data file
     
+    dump_file: None or str (optional)
+        name of the file that add information related to the data
+
+    min_obs: int (optional)
+        quantity of minimum observation for discarding light curves
+    
+    normalize: bool
+        if it is True, flux will be normalized
     """
     curves = reader(curves_file)
 
@@ -223,6 +250,25 @@ def preprocess(curves_file, dump_file=None, min_obs=5, normalize=False):
 
 def curves_augmentation(curves_preprocessed):
     """
+    Function that combines different observations under different filters,
+    adding additional data
+
+    The combinations considered are:
+    g  r  i  z
+    g  r  i
+    g  r  z
+    g  i  z
+    r  i  z
+    g  r
+    g  i
+    g  z
+    r  i
+    r  z
+    i  z
+
+    Input
+    =====
+    curves_preprocessed: DataFrame
     """
 
     combinations = []
@@ -244,7 +290,7 @@ def curves_augmentation(curves_preprocessed):
 
 def replace_nan_array(df_with_nan, array=np.zeros(100)):
     """
-    
+    Function that replace NaN values by an array
     """
     df_without_nan = df_with_nan.copy()
     for column_name, column  in df_with_nan.items():
@@ -261,6 +307,8 @@ def replace_nan_array(df_with_nan, array=np.zeros(100)):
 
 def RNN_reshape(curves):
     """
+    Function that reshape the data in a way that the Neural Network can
+    work with those
     """
     bands = ['g ', 'r ', 'i ', 'z ']
     features = ['Days', *bands]
