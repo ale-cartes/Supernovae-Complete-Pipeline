@@ -226,7 +226,7 @@ def curves_augmentation(curves_preprocessed):
     """
 
     combinations = []
-    for r in range(1, len(bands) + 1):
+    for r in range(2, len(bands) + 1):
         for subset in itertools.combinations(bands, r):
             combinations.append(subset)
     
@@ -244,6 +244,7 @@ def curves_augmentation(curves_preprocessed):
 
 def replace_nan_array(df_with_nan, array=np.zeros(100)):
     """
+    
     """
     df_without_nan = df_with_nan.copy()
     for column_name, column  in df_with_nan.items():
@@ -261,8 +262,9 @@ def replace_nan_array(df_with_nan, array=np.zeros(100)):
 def RNN_reshape(curves):
     """
     """
+    bands = ['g ', 'r ', 'i ', 'z ']
     features = ['Days', *bands]
-    curves_RNN = curves[features].to_numpy.tolist()
+    curves_RNN = curves[features].to_numpy().tolist()
     types = curves.Type.to_numpy()
 
     n_obs = curves.index.size
@@ -271,6 +273,8 @@ def RNN_reshape(curves):
 
     curves_RNN = np.reshape(curves_RNN, (n_obs, n_seq, n_features))
     types = types.reshape((-1, 1))
+
+    return curves_RNN, types
 
 
     
