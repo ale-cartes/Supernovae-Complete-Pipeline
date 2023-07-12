@@ -5,10 +5,11 @@ from astropy.table import Table
 from astropy.io import fits
 from scipy.interpolate import splrep, splev
 from sklearn.metrics import confusion_matrix, roc_curve, auc
+from keras import utils
 import itertools
 
 
-def reader(file_name, fits_header=False):
+def reader(file_name, fits_header=False, band='BAND'):
     """
     Function that reads fits files and return a light-curves
     data frame
@@ -16,7 +17,7 @@ def reader(file_name, fits_header=False):
     Input
     ------
     file_name: str
-      fits file name
+        fits file name
     """
 
     if fits_header:
@@ -35,7 +36,7 @@ def reader(file_name, fits_header=False):
     light_curves.reset_index(inplace=True)
     light_curves.drop(columns='index', inplace=True)
 
-    light_curves['BAND'] = light_curves.BAND.str.decode('utf-8')
+    light_curves['BAND'] = light_curves[band].str.decode('utf-8')
     light_curves.name = file_name.split('/')[-1]
 
     return light_curves
@@ -149,10 +150,10 @@ def fitter_Bspline(curve, band, t_ev, order=3, w_power=1):
     =====
     curve: pd.dataFrame
       light curve data Frame
-    
+
     band: str
       band of observation to be interpolated
-    
+
     t_ev: np.array
       time at which the B-spline is evaluated
     """
@@ -168,6 +169,112 @@ def fitter_Bspline(curve, band, t_ev, order=3, w_power=1):
     return flux_fit
 
 
+def preprocess(curves_file, dump_file=None, min_obs=5, normalize=False):
+    """
+    
+    """
+    curves = reader(curves_file)
+
+    if not np.equal(dump_file, None):
+        peakmjd_to_days(curves, dump_file, inplace=True, output=False)
+    
+    else:
+        mjd_to_days(curves, inplace=True, output=False)
+
+    columns = ['obs', 'MJD', 'Days', 'BAND', 'FLUXCAL', 'FLUXCALERR']
+
+    curves_nonfiltered = curves[columns]
+
+    # discard light curves with few observations in a band
+    curves_nonfilt_group = curves_nonfiltered.groupby('obs')
+    curves_band_counts = curves_nonfilt_group.BAND.value_counts()
+
+    obs_discard = []
+    for obs in curves_nonfiltered.obs.unique():
+        if not (curves_band_counts[obs] > min_obs).all():
+            obs_discard.append(obs)
+
+    curves = curves_nonfiltered[~curves_nonfiltered.obs.isin(obs_discard)]
+
+    global bands
+    bands = ['g ', 'r ', 'i ', 'z ']
+
+    curves_group = curves.groupby('obs')
+    dict_curves_fitted = {}
+
+    for obs, curve in curves_group:
+        t_ev = np.linspace(curve.Days.min(), curve.Days.max(), 100)
+        dict_curve_fitted = {"Days": t_ev}
+
+        for band in bands:
+            flux_fitted = fitter_Bspline(curve, band, t_ev, order=min_obs)
+
+            if normalize:
+                flux_fitted = utils.normalize(flux_fitted)
+                
+            dict_curve_fitted[band] = flux_fitted
+        
+        dict_curves_fitted[obs] = dict_curve_fitted
+
+    curves_fitted = pd.DataFrame(dict_curves_fitted).transpose()
+
+    return curves_fitted
+    
+
+def curves_augmentation(curves_preprocessed):
+    """
+    """
+
+    combinations = []
+    for r in range(1, len(bands) + 1):
+        for subset in itertools.combinations(bands, r):
+            combinations.append(subset)
+    
+    df_augmentation = pd.DataFrame([])
+
+    for combination in combinations:
+        cols = ['Days', *combination]
+        df_augmentation = pd.concat([df_augmentation,\
+                                     curves_preprocessed[cols]],
+                                    ignore_index=True)
+    
+    # curves = pd.concat([curves_preprocessed, df_augmentation])
+    return df_augmentation
+
+
+def replace_nan_array(df_with_nan, array=np.zeros(100)):
+    """
+    
+    """
+    df_without_nan = df_with_nan.copy()
+    for column_name, column  in df_with_nan.items():
+        if not np.any(column.isna()): continue
+
+        column_copy = column.copy()
+        for i, content in enumerate(column):
+            if np.any(np.isnan(content)):
+                column_copy[i] = array
+            
+        df_without_nan[column_name] = column_copy
+    return df_without_nan
+
+
+def RNN_reshape(curves):
+    """
+    """
+    features = ['Days', *bands]
+    curves_RNN = curves[features].to_numpy.tolist()
+    types = curves.Type.to_numpy()
+
+    n_obs = curves.index.size
+    n_seq = 100
+    n_features = len(features)
+
+    curves_RNN = np.reshape(curves_RNN, (n_obs, n_seq, n_features))
+    types = types.reshape((-1, 1))
+
+
+    
 def plotter(data_frame, obs, summary=None, days=False, dump=None):
     """
     Function that plots supernova lightcurve
@@ -203,7 +310,7 @@ def plotter(data_frame, obs, summary=None, days=False, dump=None):
     fig, ax = plt.subplots(figsize=(14, 8))
 
     for band in (data_obs['BAND'].value_counts()).index:
-        data_to_plot = data_obs[data_obs.BAND == band]
+        data_to_plot = data_obs[data_obs['BAND'] == band]
 
         xdata_plot = data_to_plot.MJD
         if days:
@@ -229,7 +336,7 @@ def plotter(data_frame, obs, summary=None, days=False, dump=None):
                      rf"peak: {summ_obs['PEAKMJD'].values[0]}, " +
                      rf"SN type: {summ_obs['SNTYPE'].values[0]}")
     ax.legend()
-    
+
     return fig, ax
 
 
@@ -245,10 +352,10 @@ def plot_confusion_matrix(test_data, pred_data, classes,
     =====
     test_data: np.array
       True labels from test set
-    
+
     pred_data: np.array
       Predicted labels from the model
-    
+
     normalize: bool (optional)
       if True, the confusion matrix will be normalized. Defaulte is False
     """
@@ -281,29 +388,29 @@ def plot_confusion_matrix(test_data, pred_data, classes,
 
 
 def plot_roc_curve(test_data, pred_data, auc_print=False):
-  """
-  Function that plots the ROC curve given the testing
-  and predicted data
+    """
+    Function that plots the ROC curve given the testing
+    and predicted data
 
-  Input
-  =====
-  test_data: np.array
-    True labels from test set
-    
-  pred_data: np.array
-    Predicted labels from the model
-  
-  auc_print: bool (optional)
-    if it is True, AUC will be printed
-  """
-  fpr, tpr, threshold = roc_curve(test_data, pred_data)
+    Input
+    =====
+    test_data: np.array
+      True labels from test set
 
-  if auc_print:
-    print(f'AUC = {auc(fpr, tpr)}')
-  
-  plt.figure()
-  plt.plot([0, 1], [0, 1], 'r--')
-  plt.plot(fpr, tpr, marker='.')
-  plt.xlabel('False Positive rate')
-  plt.ylabel('True Positive rate')
-  plt.title('ROC Curve')
+    pred_data: np.array
+      Predicted labels from the model
+
+    auc_print: bool (optional)
+      if it is True, AUC will be printed
+    """
+    fpr, tpr, threshold = roc_curve(test_data, pred_data)
+
+    if auc_print:
+        print(f'AUC = {auc(fpr, tpr)}')
+
+    plt.figure()
+    plt.plot([0, 1], [0, 1], 'r--')
+    plt.plot(fpr, tpr, marker='.')
+    plt.xlabel('False Positive rate')
+    plt.ylabel('True Positive rate')
+    plt.title('ROC Curve')
