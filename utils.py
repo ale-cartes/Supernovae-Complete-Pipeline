@@ -230,11 +230,16 @@ def preprocess(curves_file, band='BAND', dump_file=None, min_obs=5, normalize=Fa
     dict_curves_fitted = {}
 
     for obs, curve in curves_group:
-        t_ev = np.linspace(curve.Days.min(), curve.Days.max(), 100)
+        len_seq = 100
+        t_ev = np.linspace(curve.Days.min(), curve.Days.max(), len_seq)
         dict_curve_fitted = {"Days": t_ev}
 
         for band in bands:
-            flux_fitted = fitter_Bspline(curve, band, t_ev, order=min_obs)
+            if curve[curve.BAND == band].empty:
+                flux_fitted = np.zeros(len_seq)
+                
+            else:
+                flux_fitted = fitter_Bspline(curve, band, t_ev, order=min_obs)
 
             if normalize:
                 flux_fitted = utils.normalize(flux_fitted)[0]
