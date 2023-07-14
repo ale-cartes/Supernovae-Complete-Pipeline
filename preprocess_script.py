@@ -45,8 +45,8 @@ curves_RNN, types_RNN = RNN_reshape(curves_fitted)
 
 # save the data
 if save_input:
-    file_name = 'curves_RNN'
-    file_types = 'types_RNN'
+    file_name = './data_folder/curves_RNN'
+    file_types = './data_folder/types_RNN'
 
     if normalize:
         file_name += '_norm'

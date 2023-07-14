@@ -18,10 +18,10 @@ def reader(file_name, fits_header=False, band='BAND'):
     ------
     file_name: str
         fits file name
-    
+
     fits_header: bool
         if it is True, the header will be printed
-    
+
     band: str (optional)
         name of the column related to the filter used for observation
     """
@@ -165,7 +165,7 @@ def fitter_Bspline(curve, band, t_ev, order=3, w_power=1):
 
     order: int (optional)
         order of the spline
-    
+
     w_power: 1
         power of the weight applicated to the incerteinty related to the fluxes
     """
@@ -181,7 +181,7 @@ def fitter_Bspline(curve, band, t_ev, order=3, w_power=1):
     return flux_fit
 
 
-def preprocess(curves_file, dump_file=None, min_obs=5, normalize=False):
+def preprocess(curves_file, band='BAND', dump_file=None, min_obs=5, normalize=False):
     """
     Function that interpolates light curves, discarding curves that contain
     less than a certain amount of observation.
@@ -190,21 +190,21 @@ def preprocess(curves_file, dump_file=None, min_obs=5, normalize=False):
     =====
     curves_file: str
         name of the data file
-    
+
     dump_file: None or str (optional)
         name of the file that add information related to the data
 
     min_obs: int (optional)
         quantity of minimum observation for discarding light curves
-    
+
     normalize: bool
         if it is True, flux will be normalized
     """
-    curves = reader(curves_file)
+    curves = reader(curves_file, band=band)
 
     if not np.equal(dump_file, None):
         peakmjd_to_days(curves, dump_file, inplace=True, output=False)
-    
+
     else:
         mjd_to_days(curves, inplace=True, output=False)
 
@@ -237,16 +237,16 @@ def preprocess(curves_file, dump_file=None, min_obs=5, normalize=False):
             flux_fitted = fitter_Bspline(curve, band, t_ev, order=min_obs)
 
             if normalize:
-                flux_fitted = utils.normalize(flux_fitted)
-                
+                flux_fitted = utils.normalize(flux_fitted)[0]
+
             dict_curve_fitted[band] = flux_fitted
-        
+
         dict_curves_fitted[obs] = dict_curve_fitted
 
     curves_fitted = pd.DataFrame(dict_curves_fitted).transpose()
 
     return curves_fitted
-    
+
 
 def curves_augmentation(curves_preprocessed):
     """
@@ -275,15 +275,15 @@ def curves_augmentation(curves_preprocessed):
     for r in range(2, len(bands) + 1):
         for subset in itertools.combinations(bands, r):
             combinations.append(subset)
-    
+
     df_augmentation = pd.DataFrame([])
 
     for combination in combinations:
         cols = ['Days', *combination]
-        df_augmentation = pd.concat([df_augmentation,\
+        df_augmentation = pd.concat([df_augmentation,
                                      curves_preprocessed[cols]],
                                     ignore_index=True)
-    
+
     # curves = pd.concat([curves_preprocessed, df_augmentation])
     return df_augmentation
 
@@ -293,14 +293,15 @@ def replace_nan_array(df_with_nan, array=np.zeros(100)):
     Function that replace NaN values by an array
     """
     df_without_nan = df_with_nan.copy()
-    for column_name, column  in df_with_nan.items():
-        if not np.any(column.isna()): continue
+    for column_name, column in df_with_nan.items():
+        if not np.any(column.isna()):
+            continue
 
         column_copy = column.copy()
         for i, content in enumerate(column):
             if np.any(np.isnan(content)):
                 column_copy[i] = array
-            
+
         df_without_nan[column_name] = column_copy
     return df_without_nan
 
@@ -325,7 +326,6 @@ def RNN_reshape(curves):
     return curves_RNN, types
 
 
-    
 def plotter(data_frame, obs, summary=None, days=False, dump=None):
     """
     Function that plots supernova lightcurve
@@ -461,7 +461,7 @@ def plot_roc_curve(test_data, pred_data, auc_print=False):
 
     plt.figure()
     plt.plot([0, 1], [0, 1], 'r--')
-    plt.plot(fpr, tpr, marker='.')
+    plt.plot(fpr, tpr, marker='o')
     plt.xlabel('False Positive rate')
     plt.ylabel('True Positive rate')
     plt.title('ROC Curve')
