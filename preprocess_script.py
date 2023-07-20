@@ -37,8 +37,8 @@ curves_fitted = pd.concat((Ia_fitted, nonIa_fitted), ignore_index=True)
 curves_fitted = replace_nan_array(curves_fitted)
 
 # one-hot encoder: 1 -> Ia, 0 -> nonIa
-Type = [1 if j < len(Ia_fitted) else 0 for j in range(len(curves_fitted))]
-curves_fitted['Type'] = Type
+types = [1 if j < len(Ia_fitted) else 0 for j in range(len(curves_fitted))]
+curves_fitted['Type'] = types
 
 # give Neural Network format to the data
 curves_RNN, types_RNN = RNN_reshape(curves_fitted)

@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 from astropy.table import Table
-from astropy.io import fits
+from astropy.io import fits, ascii
 from scipy.interpolate import splrep, splev
 from sklearn.metrics import confusion_matrix, roc_curve, auc
 from keras import utils
@@ -59,7 +59,7 @@ def summary(dump_file):
     dump_file: str
       dump_file's name
     """
-    data = pd.read_csv(dump_file, delimiter=' ', header=5, usecols=[11])
+    data = ascii.read(dump_file).to_pandas()
 
     type_map = {1: 'Ia',
                 20: 'II+IIP', 21: 'IIn+IIN', 22: 'IIL',
@@ -130,14 +130,17 @@ def peakmjd_to_days(lightcurve, dump_file, specific_obs=None, inplace=False,
       if it's True, an array of days will be returned
     """
 
-    data = pd.read_csv(dump_file, delimiter=' ', header=5, usecols=[2, 4],
-                       names=['obs', 'PEAKMJD'])
+    data = ascii.read(dump_file).to_pandas()
+
+    if 'CID' in data.columns:
+        data.rename(columns={'CID': 'obs'}, inplace=True)
+        data.drop(columns=['VARNAMES:'], inplace=True)
 
     if type(specific_obs) == int:
         lightcurve = lightcurve[lightcurve.obs == specific_obs]
         data = data[data.obs == specific_obs]
 
-    data = pd.merge(lightcurve, data, on='obs')
+    data = pd.merge(data, lightcurve, on='obs')
     days = data.MJD - data.PEAKMJD
 
     if inplace and ("Days" not in lightcurve.columns):
@@ -241,8 +244,8 @@ def preprocess(curves_file, band='BAND', dump_file=None, min_obs=5, normalize=Fa
             else:
                 flux_fitted = fitter_Bspline(curve, band, t_ev, order=min_obs)
 
-            if normalize:
-                flux_fitted = utils.normalize(flux_fitted)[0]
+                if normalize:
+                    flux_fitted = utils.normalize(flux_fitted)[0]
 
             dict_curve_fitted[band] = flux_fitted
 
@@ -349,16 +352,17 @@ def plotter(data_frame, obs, summary=None, days=False, dump=None):
     days (optional): bool
       if it's True, MJD will be expressed as days
     """
-    data_obs = data_frame[data_frame['obs'] == obs]
     xlabel = 'MJD'
 
     if days:
         xlabel = 'Days'
 
         # if Days have not been calculated
-        if 'Days' not in data_obs.columns:
-            peakmjd_to_days(data_obs, dump, inplace=True, specific_obs=obs,
+        if 'Days' not in data_frame.columns:
+            peakmjd_to_days(data_frame, dump, inplace=True, specific_obs=None,
                             output=False)
+
+    data_obs = data_frame[data_frame['obs'] == obs]
 
     color = {'u ': 'purple', 'g ': 'green', 'r ': 'red',
              'i ': (150/255, 0, 0), 'z ': (60/255, 0, 0)}
