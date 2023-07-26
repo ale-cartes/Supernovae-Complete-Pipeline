@@ -15,7 +15,7 @@ def reader(file_name, fits_header=False, band='BAND'):
     data frame
 
     Input
-    ------
+    =====
     file_name: str
         fits file name
 
@@ -28,14 +28,13 @@ def reader(file_name, fits_header=False, band='BAND'):
 
     if fits_header:
         with fits.open(file_name) as fits_file:
-            global header
             header = fits_file[0].header
             print(repr(header))
 
     light_curves = Table.read(file_name, format='fits').to_pandas()
     index_obs_separator = light_curves[light_curves['MJD'] == -777].index
 
-    obs = np.cumsum(light_curves['MJD'] == -777) + 1
+    obs = np.cumsum(light_curves['MJD'] == -777)
 
     light_curves.insert(0, 'obs', obs)
     light_curves.drop(index_obs_separator, inplace=True)
@@ -48,24 +47,25 @@ def reader(file_name, fits_header=False, band='BAND'):
     return light_curves
 
 
-def summary(dump_file):
+def summary(head_file):
     """
-    Function that reads a CSV file containing supernova
+    Function that reads a file containing supernova
     data and sumarizes the SNTYPE column
 
     Input
     =====
 
-    dump_file: str
-      dump_file's name
+    head_file: str
+       HEAD.FITS file
     """
-    data = ascii.read(dump_file).to_pandas()
+    data = Table.read(head_file, format='fits').to_pandas()
+    data['obs'] = data.index
 
-    type_map = {1: 'Ia',
+    type_map = {101: 'Ia',
                 20: 'II+IIP', 21: 'IIn+IIN', 22: 'IIL',
                 32: 'Ib', 33: 'Ic+Ibc'}
 
-    data = data.replace(type_map)
+    data['SNTYPE'] = data['SNTYPE'].replace(type_map)
 
     return data
 
@@ -78,17 +78,17 @@ def mjd_to_days(lightcurve, specific_obs=None, inplace=False, output=False):
     Input
     =====
     lightcurve: pd.dataFrame
-      lightcurve data frame
+        lightcurve data frame
 
     specific_obs: None or int (optional)
-      if it is None, days will be calculted for all data in Data Frame
+        if it is None, days will be calculted for all data in Data Frame
 
     inplace: bool (optional)
-      if inplace is True, the function adds a new column labeled as "Days"
-      to the dataFrame
+        if inplace is True, the function adds a new column labeled as "Days"
+        to the dataFrame
 
     output: bool (optional)
-      if it's True, an array of days will be returned
+        if it's True, an array of days will be returned
     """
 
     if type(specific_obs) == int:
@@ -105,7 +105,7 @@ def mjd_to_days(lightcurve, specific_obs=None, inplace=False, output=False):
         return days.to_numpy()
 
 
-def peakmjd_to_days(lightcurve, dump_file, specific_obs=None, inplace=False,
+def peakmjd_to_days(lightcurve, head_file, specific_obs=None, inplace=False,
                     output=False):
     """
     Function that transforms MJD dates to days, where day 0 corresponds to
@@ -114,33 +114,29 @@ def peakmjd_to_days(lightcurve, dump_file, specific_obs=None, inplace=False,
     Input
     =====
     lightcurve: pd.dataFrame
-      lightcurve data frame
+        lightcurve data frame
 
-    dump_file: str
-      name of the file that contains the moment of the peak
+    head_file: str
+        name of the file that contains the moment of the peak
 
     specific_obs: None or int (optional)
-      if it is None, days will be calculted for all data in Data Frame
+        if it is None, days will be calculted for all data in Data Frame
 
     inplace: bool (optional)
-      if inplace is True, the function adds a new column labeled as "Days"
-      to the dataFrame
+        if inplace is True, the function adds a new column labeled as "Days"
+        to the dataFrame
 
     output: bool (optional)
-      if it's True, an array of days will be returned
+        if it's True, an array of days will be returned
     """
 
-    data = ascii.read(dump_file).to_pandas()
-
-    if 'CID' in data.columns:
-        data.rename(columns={'CID': 'obs'}, inplace=True)
-        data.drop(columns=['VARNAMES:'], inplace=True)
+    data = summary(head_file)
 
     if type(specific_obs) == int:
         lightcurve = lightcurve[lightcurve.obs == specific_obs]
         data = data[data.obs == specific_obs]
 
-    data = pd.merge(data, lightcurve, on='obs')
+    data = pd.merge(lightcurve, data, on='obs')
     days = data.MJD - data.PEAKMJD
 
     if inplace and ("Days" not in lightcurve.columns):
@@ -184,7 +180,8 @@ def fitter_Bspline(curve, band, t_ev, order=3, w_power=1):
     return flux_fit
 
 
-def preprocess(curves_file, band='BAND', dump_file=None, min_obs=5, normalize=False):
+def preprocess(curves_file, band='BAND', head_file=None, min_obs=5,
+               normalize=False):
     """
     Function that interpolates light curves, discarding curves that contain
     less than a certain amount of observation.
@@ -194,7 +191,7 @@ def preprocess(curves_file, band='BAND', dump_file=None, min_obs=5, normalize=Fa
     curves_file: str
         name of the data file
 
-    dump_file: None or str (optional)
+    head_file: None or str (optional)
         name of the file that add information related to the data
 
     min_obs: int (optional)
@@ -205,8 +202,8 @@ def preprocess(curves_file, band='BAND', dump_file=None, min_obs=5, normalize=Fa
     """
     curves = reader(curves_file, band=band)
 
-    if not np.equal(dump_file, None):
-        peakmjd_to_days(curves, dump_file, inplace=True, output=False)
+    if not np.equal(head_file, None):
+        peakmjd_to_days(curves, head_file, inplace=True, output=False)
 
     else:
         mjd_to_days(curves, inplace=True, output=False)
@@ -240,7 +237,7 @@ def preprocess(curves_file, band='BAND', dump_file=None, min_obs=5, normalize=Fa
         for band in bands:
             if curve[curve.BAND == band].empty:
                 flux_fitted = np.zeros(len_seq)
-                
+
             else:
                 flux_fitted = fitter_Bspline(curve, band, t_ev, order=min_obs)
 
@@ -334,7 +331,7 @@ def RNN_reshape(curves):
     return curves_RNN, types
 
 
-def plotter(data_frame, obs, summary=None, days=False, dump=None):
+def plotter(data_frame, obs, info=None, days=False, head_file=None):
     """
     Function that plots supernova lightcurve
 
@@ -346,8 +343,8 @@ def plotter(data_frame, obs, summary=None, days=False, dump=None):
     obs: int
       observation number
 
-    summary (optional): None or str
-      path to file with information related to nonIa supernovae (.DUMP)
+    info (optional): None or str
+      path to file with information related to nonIa supernovae (HEAD.FITS)
 
     days (optional): bool
       if it's True, MJD will be expressed as days
@@ -358,9 +355,9 @@ def plotter(data_frame, obs, summary=None, days=False, dump=None):
         xlabel = 'Days'
 
         # if Days have not been calculated
-        if 'Days' not in data_frame.columns:
-            peakmjd_to_days(data_frame, dump, inplace=True, specific_obs=None,
-                            output=False)
+        if 'Days' not in data_frame.columns and not np.equal(head_file, None):
+            peakmjd_to_days(data_frame, head_file, inplace=True,
+                            specific_obs=None, output=False)
 
     data_obs = data_frame[data_frame['obs'] == obs]
 
@@ -389,8 +386,9 @@ def plotter(data_frame, obs, summary=None, days=False, dump=None):
         name = ''
 
     ax.set_title(f'{name}, obs: {obs}')
-    if not isinstance(summary, type(None)):
-        summ_obs = summary.query('CID == @obs')
+    if not np.equal(info, None):
+        summ = summary(info)
+        summ_obs = summ[summ.obs == obs]
         ax.set_title(rf"{name}, " +
                      rf"obs: {obs}, " +
                      rf"peak: {summ_obs['PEAKMJD'].values[0]}, " +
@@ -411,13 +409,13 @@ def plot_confusion_matrix(test_data, pred_data, classes,
     Input
     =====
     test_data: np.array
-      True labels from test set
+        True labels from test set
 
     pred_data: np.array
-      Predicted labels from the model
+        Predicted labels from the model
 
     normalize: bool (optional)
-      if True, the confusion matrix will be normalized. Defaulte is False
+        if True, the confusion matrix will be normalized. Defaulte is False
     """
 
     cm = confusion_matrix(test_data, pred_data, labels=[1, 0])
@@ -455,13 +453,13 @@ def plot_roc_curve(test_data, pred_data, auc_print=False):
     Input
     =====
     test_data: np.array
-      True labels from test set
+        True labels from test set
 
     pred_data: np.array
-      Predicted labels from the model
+        Predicted labels from the model
 
     auc_print: bool (optional)
-      if it is True, AUC will be printed
+        if it is True, AUC will be printed
     """
     fpr, tpr, threshold = roc_curve(test_data, pred_data)
 

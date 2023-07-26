@@ -1,17 +1,14 @@
 import os
 from utils import *
 
-# requesting for data augmentation and save it
+# requesting for data augmentation and save
 normalize = (input("Do data normalization?[y/n] ") == 'y')
 aug_input = (input("Do data augmentation? [y/n] ") == 'y')
 save_input = (input("save data? [y/n] ") == 'y')
 
 # searching for files and folders
 path = os.getcwd()
-
-folder = 'Supernovae-Complete-Pipeline'
-path_back = os.path.split(path)[0]
-curves_dir = os.path.join(path_back, 'curves')
+curves_dir = "Lightcurves\curves"
 
 Ia_DES_file = os.path.join(curves_dir, 'Ia', 'DES', 'DES_Ia_PHOT.FITS')
 nonIa_DES_file = os.path.join(curves_dir, 'nonIa', 'DES', 'DES_nonIa_PHOT.FITS')
@@ -20,18 +17,19 @@ Ia_dump = os.path.join(path, 'Lightcurves', 'Ia', 'DES', 'DES_Ia.DUMP')
 nonIa_dump = os.path.join(path, 'Lightcurves', 'nonIa', 'DES', 'DES_nonIa.DUMP')
 nonIa_summary = summary(nonIa_dump)
 
-print('nonIa types:', nonIa_summary.value_counts(), sep='\n')
+print('nonIa types:', nonIa_summary['SNTYPE'].value_counts(), sep='\n')
 
 # preprocess the data
 if aug_input:
-    Ia_fitted = curves_augmentation(preprocess(Ia_DES_file, Ia_dump,
+    Ia_fitted = curves_augmentation(preprocess(Ia_DES_file, dump_file=Ia_dump,
                                                normalize=normalize))
-    nonIa_fitted = curves_augmentation(preprocess(nonIa_DES_file, nonIa_dump,
+    nonIa_fitted = curves_augmentation(preprocess(nonIa_DES_file,
+                                                  dump_file=nonIa_dump,
                                                   normalize=normalize))
 
 else:
-    Ia_fitted = preprocess(Ia_DES_file, Ia_dump)
-    nonIa_fitted = preprocess(nonIa_DES_file, nonIa_dump)
+    Ia_fitted = preprocess(Ia_DES_file, dump_file=Ia_dump)
+    nonIa_fitted = preprocess(nonIa_DES_file, dump_file=nonIa_dump)
 
 curves_fitted = pd.concat((Ia_fitted, nonIa_fitted), ignore_index=True)
 curves_fitted = replace_nan_array(curves_fitted)
