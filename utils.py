@@ -62,8 +62,11 @@ def summary(head_file):
     data['obs'] = data.index
 
     type_map = {101: 'Ia',
-                20: 'II+IIP', 21: 'IIn+IIN', 22: 'IIL',
-                32: 'Ib', 33: 'Ic+Ibc'}
+                20: 'II+IIP', 120: 'II+IIP', 
+                21: 'IIn+IIN', 121: 'IIn+IIN',
+                22: 'IIL', 122: 'IIL',
+                32: 'Ib', 132: 'Ib',
+                33: 'Ic+Ibc', 133: 'Ic+Ibc'}
 
     data['SNTYPE'] = data['SNTYPE'].replace(type_map)
 
