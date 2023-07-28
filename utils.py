@@ -166,7 +166,7 @@ def fitter_Bspline(curve, band, t_ev, order=3, w_power=1):
         time at which the B-spline is evaluated
 
     order: int (optional)
-        order of the spline
+        order of the spline (only values between 1 to 5)
 
     w_power: 1
         power of the weight applicated to the incerteinty related to the fluxes
@@ -184,7 +184,7 @@ def fitter_Bspline(curve, band, t_ev, order=3, w_power=1):
 
 
 def preprocess(curves_file, band='BAND', head_file=None, min_obs=5,
-               normalize=False):
+               spline_order=5, normalize=False):
     """
     Function that interpolates light curves, discarding curves that contain
     less than a certain amount of observation.
@@ -196,6 +196,9 @@ def preprocess(curves_file, band='BAND', head_file=None, min_obs=5,
 
     head_file: None or str (optional)
         name of the file that add information related to the data
+
+    spline_order: int (optional) 
+        order of the spline (only values between 1 to 5)
 
     min_obs: int (optional)
         quantity of minimum observation for discarding light curves
@@ -242,7 +245,8 @@ def preprocess(curves_file, band='BAND', head_file=None, min_obs=5,
                 flux_fitted = np.zeros(len_seq)
 
             else:
-                flux_fitted = fitter_Bspline(curve, band, t_ev, order=min_obs)
+                flux_fitted = fitter_Bspline(curve, band, t_ev,
+                                             order=spline_order)
 
                 if normalize:
                     flux_fitted = utils.normalize(flux_fitted)[0]

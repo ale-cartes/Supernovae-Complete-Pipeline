@@ -8,28 +8,29 @@ save_input = (input("save data? [y/n] ") == 'y')
 
 # searching for files and folders
 path = os.getcwd()
-curves_dir = "Lightcurves\curves"
+curves_dir = "Lightcurves/curves"
 
 Ia_DES_file = os.path.join(curves_dir, 'Ia', 'DES', 'DES_Ia_PHOT.FITS')
 nonIa_DES_file = os.path.join(curves_dir, 'nonIa', 'DES', 'DES_nonIa_PHOT.FITS')
 
-Ia_dump = os.path.join(path, 'Lightcurves', 'Ia', 'DES', 'DES_Ia.DUMP')
-nonIa_dump = os.path.join(path, 'Lightcurves', 'nonIa', 'DES', 'DES_nonIa.DUMP')
-nonIa_summary = summary(nonIa_dump)
+Ia_head = os.path.join(curves_dir, 'Ia', 'DES', 'DES_Ia_HEAD.FITS')
+nonIa_head = os.path.join(curves_dir, 'nonIa', 'DES', 'DES_nonIa_HEAD.FITS')
+nonIa_summary = summary(nonIa_head)
 
 print('nonIa types:', nonIa_summary['SNTYPE'].value_counts(), sep='\n')
 
 # preprocess the data
 if aug_input:
-    Ia_fitted = curves_augmentation(preprocess(Ia_DES_file, dump_file=Ia_dump,
+    Ia_fitted = curves_augmentation(preprocess(Ia_DES_file, head_file=Ia_head,
                                                normalize=normalize))
     nonIa_fitted = curves_augmentation(preprocess(nonIa_DES_file,
-                                                  dump_file=nonIa_dump,
+                                                  head_file=nonIa_head,
                                                   normalize=normalize))
 
 else:
-    Ia_fitted = preprocess(Ia_DES_file, dump_file=Ia_dump)
-    nonIa_fitted = preprocess(nonIa_DES_file, dump_file=nonIa_dump)
+    Ia_fitted = preprocess(Ia_DES_file, head_file=Ia_head, normalize=normalize)
+    nonIa_fitted = preprocess(nonIa_DES_file, head_file=nonIa_head,
+                              normalize=normalize)
 
 curves_fitted = pd.concat((Ia_fitted, nonIa_fitted), ignore_index=True)
 curves_fitted = replace_nan_array(curves_fitted)
