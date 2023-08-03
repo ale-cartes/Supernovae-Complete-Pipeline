@@ -1,0 +1,12 @@
+*__pycache__
+*ipynb_checkpoints
+*.npy
+*.pkl
+
+
+A-Moller sim/Ia
+A-Moller sim/nonIa
+A-Moller sim/*FITRES
+Lightcurves/curves/
+
+sandbox.ipynb
