@@ -62,7 +62,7 @@ def summary(head_file):
     data['obs'] = data.index
 
     type_map = {101: 'Ia',
-                20: 'II+IIP', 120: 'II+IIP', 
+                20: 'II+IIP', 120: 'II+IIP',
                 21: 'IIn+IIN', 121: 'IIn+IIN',
                 22: 'IIL', 122: 'IIL',
                 32: 'Ib', 132: 'Ib',
@@ -135,15 +135,21 @@ def peakmjd_to_days(lightcurve, head_file, specific_obs=None, inplace=False,
 
     data = summary(head_file)
 
-    if type(specific_obs) == int:
-        lightcurve = lightcurve[lightcurve.obs == specific_obs]
-        data = data[data.obs == specific_obs]
+    lightcurve_index = lightcurve.index
+    data_index = data.index
 
-    data = pd.merge(lightcurve, data, on='obs')
+    if type(specific_obs) == int:
+        lightcurve_index = lightcurve[lightcurve.obs == specific_obs].index
+        data_index = data[data.obs == specific_obs].index
+
+    data = pd.merge(lightcurve.iloc[lightcurve_index],
+                    data.iloc[data_index],
+                    on='obs')
+
     days = data.MJD - data.PEAKMJD
 
-    if inplace and ("Days" not in lightcurve.columns):
-        lightcurve['Days'] = days
+    if inplace:
+        lightcurve.loc[lightcurve_index, 'Days'] = days.to_numpy()
 
     if output:
         return days.to_numpy()
@@ -184,7 +190,7 @@ def fitter_Bspline(curve, band, t_ev, order=3, w_power=1):
 
 
 def preprocess(curves_file, band='BAND', head_file=None, min_obs=5,
-               spline_order=5, normalize=False):
+               spline_order=5, w_power=1, normalize=False):
     """
     Function that interpolates light curves, discarding curves that contain
     less than a certain amount of observation.
@@ -197,7 +203,7 @@ def preprocess(curves_file, band='BAND', head_file=None, min_obs=5,
     head_file: None or str (optional)
         name of the file that add information related to the data
 
-    spline_order: int (optional) 
+    spline_order: int (optional)
         order of the spline (only values between 1 to 5)
 
     min_obs: int (optional)
@@ -236,6 +242,7 @@ def preprocess(curves_file, band='BAND', head_file=None, min_obs=5,
     dict_curves_fitted = {}
 
     for obs, curve in curves_group:
+        global len_seq
         len_seq = 100
         t_ev = np.linspace(curve.Days.min(), curve.Days.max(), len_seq)
         dict_curve_fitted = {"Days": t_ev}
@@ -246,7 +253,8 @@ def preprocess(curves_file, band='BAND', head_file=None, min_obs=5,
 
             else:
                 flux_fitted = fitter_Bspline(curve, band, t_ev,
-                                             order=spline_order)
+                                             order=spline_order,
+                                             w_power=w_power)
 
                 if normalize:
                     flux_fitted = utils.normalize(flux_fitted)[0]
@@ -296,7 +304,6 @@ def curves_augmentation(curves_preprocessed):
                                      curves_preprocessed[cols]],
                                     ignore_index=True)
 
-    # curves = pd.concat([curves_preprocessed, df_augmentation])
     return df_augmentation
 
 
@@ -323,13 +330,12 @@ def RNN_reshape(curves):
     Function that reshape the data in a way that the Neural Network can
     work with those
     """
-    bands = ['g ', 'r ', 'i ', 'z ']
     features = ['Days', *bands]
     curves_RNN = curves[features].to_numpy().tolist()
     types = curves.Type.to_numpy()
 
     n_obs = curves.index.size
-    n_seq = 100
+    n_seq = len_seq
     n_features = len(features)
 
     curves_RNN = np.reshape(curves_RNN, (n_obs, n_seq, n_features))
@@ -338,35 +344,36 @@ def RNN_reshape(curves):
     return curves_RNN, types
 
 
-def plotter(data_frame, obs, info=None, days=False, head_file=None):
+def plotter(data_frame, obs, days=False, head_file=None):
     """
     Function that plots supernova lightcurve
 
     Input
     =====
     data_frame: pd.dataFrame
-      df with all supernovae data
+        df with all supernovae data
 
     obs: int
-      observation number
+        observation number
 
-    info (optional): None or str
-      path to file with information related to nonIa supernovae (HEAD.FITS)
+    head_file (optional): None or str
+        path to file with information related to nonIa supernovae (HEAD.FITS)
 
     days (optional): bool
-      if it's True, MJD will be expressed as days
+        if it's True, MJD will be expressed as days
     """
     xlabel = 'MJD'
+    df_copy = data_frame.copy()
 
     if days:
         xlabel = 'Days'
 
         # if Days have not been calculated
-        if 'Days' not in data_frame.columns and not np.equal(head_file, None):
-            peakmjd_to_days(data_frame, head_file, inplace=True,
-                            specific_obs=None, output=False)
+        if 'Days' not in df_copy.columns and not np.equal(head_file, None):
+            peakmjd_to_days(df_copy, head_file, inplace=True,
+                            specific_obs=obs, output=False)
 
-    data_obs = data_frame[data_frame['obs'] == obs]
+    data_obs = df_copy[df_copy['obs'] == obs]
 
     color = {'u ': 'purple', 'g ': 'green', 'r ': 'red',
              'i ': (150/255, 0, 0), 'z ': (60/255, 0, 0)}
@@ -393,8 +400,8 @@ def plotter(data_frame, obs, info=None, days=False, head_file=None):
         name = ''
 
     ax.set_title(f'{name}, obs: {obs}')
-    if not np.equal(info, None):
-        summ = summary(info)
+    if not np.equal(head_file, None):
+        summ = summary(head_file)
         summ_obs = summ[summ.obs == obs]
         ax.set_title(rf"{name}, " +
                      rf"obs: {obs}, " +
@@ -402,6 +409,24 @@ def plotter(data_frame, obs, info=None, days=False, head_file=None):
                      rf"SN type: {summ_obs['SNTYPE'].values[0]}")
     ax.legend()
 
+    return fig, ax
+
+
+def plotter_preprocess(dataframe, obs):
+    days, g, r, i, z, Type = dataframe.iloc[obs]
+
+    fig, ax = plt.subplots(figsize=(14, 8))
+
+    color = {'u ': 'purple', 'g ': 'green', 'r ': 'red',
+             'i ': (150/255, 0, 0), 'z ': (60/255, 0, 0)}
+
+    ax.plot(days, g, color=color['g '], label='g')
+    ax.plot(days, r, color=color['r '], label='r')
+    ax.plot(days, i, color=color['i '], label='i')
+    ax.plot(days, z, color=color['z '], label='z')
+
+    ax.legend()
+    ax.set_title(f"obs: {obs} - type: {'Ia' if Type==1 else 'nonIa'}")
     return fig, ax
 
 

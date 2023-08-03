@@ -15,8 +15,11 @@ nonIa_DES_file = os.path.join(curves_dir, 'nonIa', 'DES', 'DES_nonIa_PHOT.FITS')
 
 Ia_head = os.path.join(curves_dir, 'Ia', 'DES', 'DES_Ia_HEAD.FITS')
 nonIa_head = os.path.join(curves_dir, 'nonIa', 'DES', 'DES_nonIa_HEAD.FITS')
+
+Ia_summary = summary(Ia_head)
 nonIa_summary = summary(nonIa_head)
 
+print('n° Ia curves:', summary(Ia_head)['SNTYPE'].size)
 print('nonIa types:', nonIa_summary['SNTYPE'].value_counts(), sep='\n')
 
 # preprocess the data
