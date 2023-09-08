@@ -155,7 +155,7 @@ def peakmjd_to_days(lightcurve, head_file, specific_obs=None, inplace=False,
         return days.to_numpy()
 
 
-def fitter_Bspline(curve, band, t_ev, order=3, w_power=1):
+def fitter_Bspline(curve, band, t_ev, order=5, w_power=2):
     """
     Function that interpolate data using B-splines and then
     evaluates it at a specific time
@@ -171,10 +171,10 @@ def fitter_Bspline(curve, band, t_ev, order=3, w_power=1):
     t_ev: np.array
         time at which the B-spline is evaluated
 
-    order: int (optional)
+    order: int (optional, default=5)
         order of the spline (only values between 1 to 5)
 
-    w_power: 1
+    w_power: int (optional, default=2)
         power of the weight applicated to the incerteinty related to the fluxes
     """
     curve_band = curve[curve.BAND == band]
@@ -190,15 +190,15 @@ def fitter_Bspline(curve, band, t_ev, order=3, w_power=1):
 
 
 def preprocess(curves_file, band='BAND', head_file=None, min_obs=5,
-               spline_order=5, w_power=1, normalize=False):
+               w_power=2, normalize=False):
     """
     Function that interpolates light curves, discarding curves that contain
     less than a certain amount of observation.
 
     Input
     =====
-    curves_file: str
-        name of the data file
+    curves_file: str or DataFrame
+        name of the data file or dataFrame with the light curves
 
     head_file: None or str (optional)
         name of the file that add information related to the data
@@ -206,19 +206,31 @@ def preprocess(curves_file, band='BAND', head_file=None, min_obs=5,
     spline_order: int (optional)
         order of the spline (only values between 1 to 5)
 
-    min_obs: int (optional)
+    min_obs: int (optional, default=5)
         quantity of minimum observation for discarding light curves
 
     normalize: bool
         if it is True, flux will be normalized
     """
-    curves = reader(curves_file, band=band)
+    if type(curves_file) == str:
+        curves = reader(curves_file, band=band)
 
-    if not np.equal(head_file, None):
-        peakmjd_to_days(curves, head_file, inplace=True, output=False)
+        if not np.equal(head_file, None):
+            peakmjd_to_days(curves, head_file, inplace=True, output=False)
+
+        else:
+            mjd_to_days(curves, inplace=True, output=False)
 
     else:
-        mjd_to_days(curves, inplace=True, output=False)
+        curves = curves_file.copy()
+
+        if "Days" not in curves.columns:
+            print("""
+                  Please, use mjd_to_days or peakmjd_to_days functions to
+                  generate the Days column in the whole dataFrame
+                  """)
+
+            return None
 
     columns = ['obs', 'MJD', 'Days', 'BAND', 'FLUXCAL', 'FLUXCALERR']
 
@@ -235,14 +247,12 @@ def preprocess(curves_file, band='BAND', head_file=None, min_obs=5,
 
     curves = curves_nonfiltered[~curves_nonfiltered.obs.isin(obs_discard)]
 
-    global bands
     bands = ['g ', 'r ', 'i ', 'z ']
 
     curves_group = curves.groupby('obs')
     dict_curves_fitted = {}
 
     for obs, curve in curves_group:
-        global len_seq
         len_seq = 100
         t_ev = np.linspace(curve.Days.min(), curve.Days.max(), len_seq)
         dict_curve_fitted = {"Days": t_ev}
@@ -253,7 +263,7 @@ def preprocess(curves_file, band='BAND', head_file=None, min_obs=5,
 
             else:
                 flux_fitted = fitter_Bspline(curve, band, t_ev,
-                                             order=spline_order,
+                                             order=min_obs,
                                              w_power=w_power)
 
                 if normalize:
@@ -263,7 +273,7 @@ def preprocess(curves_file, band='BAND', head_file=None, min_obs=5,
 
         dict_curves_fitted[obs] = dict_curve_fitted
 
-    curves_fitted = pd.DataFrame(dict_curves_fitted).transpose()
+    curves_fitted = pd.DataFrame.from_dict(dict_curves_fitted, orient='index')
 
     return curves_fitted
 
@@ -292,6 +302,8 @@ def curves_augmentation(curves_preprocessed):
     """
 
     combinations = []
+    bands = ['g ', 'r ', 'i ', 'z ']
+
     for r in range(2, len(bands) + 1):
         for subset in itertools.combinations(bands, r):
             combinations.append(subset)
@@ -309,7 +321,7 @@ def curves_augmentation(curves_preprocessed):
 
 def replace_nan_array(df_with_nan, array=np.zeros(100)):
     """
-    Function that replace NaN values by an array
+    Function that replace NaN values in a Data Frame by an array
     """
     df_without_nan = df_with_nan.copy()
     for column_name, column in df_with_nan.items():
@@ -330,28 +342,33 @@ def RNN_reshape(curves):
     Function that reshape the data in a way that the Neural Network can
     work with those
     """
+    bands = ['g ', 'r ', 'i ', 'z ']
     features = ['Days', *bands]
     curves_RNN = curves[features].to_numpy().tolist()
-    types = curves.Type.to_numpy()
 
     n_obs = curves.index.size
-    n_seq = len_seq
+    n_seq = 100
     n_features = len(features)
 
     curves_RNN = np.reshape(curves_RNN, (n_obs, n_seq, n_features))
-    types = types.reshape((-1, 1))
 
-    return curves_RNN, types
+    if "Type" in curves.columns:
+        types = curves.Type.to_numpy()
+        types = types.reshape((-1, 1))
+
+        return curves_RNN, types
+
+    return curves_RNN, None
 
 
 def plotter(data_frame, obs, days=False, head_file=None):
     """
-    Function that plots supernova lightcurve
+    Function that plots supernova light curve
 
     Input
     =====
     data_frame: pd.dataFrame
-        df with all supernovae data
+        df with supernovae data
 
     obs: int
         observation number
@@ -413,7 +430,25 @@ def plotter(data_frame, obs, days=False, head_file=None):
 
 
 def plotter_preprocess(dataframe, obs):
-    days, g, r, i, z, Type = dataframe.iloc[obs]
+    """
+    Function that plots supernova light curve from preprocess data frame
+
+    Input
+    =====
+    data_frame: pd.dataFrame
+        df with all supernovae data
+
+    obs: int
+        observation number
+    """
+
+    if "Type" not in dataframe.columns:
+        title = f"obs: {obs}"
+        days, g, r, i, z = dataframe.iloc[obs]
+
+    else:
+        title = f"obs: {obs} - type: {'Ia' if Type==1 else 'nonIa'}"
+        days, g, r, i, z, Type = dataframe.iloc[obs]
 
     fig, ax = plt.subplots(figsize=(14, 8))
 
@@ -426,7 +461,7 @@ def plotter_preprocess(dataframe, obs):
     ax.plot(days, z, color=color['z '], label='z')
 
     ax.legend()
-    ax.set_title(f"obs: {obs} - type: {'Ia' if Type==1 else 'nonIa'}")
+    ax.set_title(title)
     return fig, ax
 
 
@@ -458,23 +493,26 @@ def plot_confusion_matrix(test_data, pred_data, classes,
     else:
         print('Confusion matrix, without normalization')
 
-    plt.imshow(cm, interpolation='nearest', cmap=cmap)
-    plt.title(title)
-    plt.colorbar()
+    fig, ax = plt.subplots()
+    im = ax.imshow(cm, interpolation='nearest', cmap=cmap)
+    ax.set_title(title)
+    fig.colorbar(im)
     tick_marks = np.arange(len(classes))
-    plt.xticks(tick_marks, classes, rotation=45)
-    plt.yticks(tick_marks, classes)
+    ax.set_xticks(tick_marks, classes, rotation=45)
+    ax.set_yticks(tick_marks, classes)
 
     fmt = '.2f' if normalize else 'd'
     thresh = cm.max() / 2.
     for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
-        plt.text(j, i, format(cm[i, j], fmt),
-                 horizontalalignment="center",
-                 color="white" if cm[i, j] > thresh else "black")
+        ax.text(j, i, format(cm[i, j], fmt),
+                horizontalalignment="center",
+                color="white" if cm[i, j] > thresh else "black")
 
-    plt.tight_layout()
-    plt.ylabel('True label')
-    plt.xlabel('Predicted label')
+    fig.tight_layout()
+    ax.set_ylabel('True label')
+    ax.set_xlabel('Predicted label')
+
+    return fig, ax
 
 
 def plot_roc_curve(test_data, pred_data, auc_print=False):
@@ -498,9 +536,11 @@ def plot_roc_curve(test_data, pred_data, auc_print=False):
     if auc_print:
         print(f'AUC = {auc(fpr, tpr)}')
 
-    plt.figure()
-    plt.plot([0, 1], [0, 1], 'r--')
-    plt.plot(fpr, tpr, marker='o')
-    plt.xlabel('False Positive rate')
-    plt.ylabel('True Positive rate')
-    plt.title('ROC Curve')
+    fig, ax = plt.subplots()
+    ax.plot([0, 1], [0, 1], 'r--')
+    ax.plot(fpr, tpr, marker='o')
+    ax.set_xlabel('False Positive rate')
+    ax.set_ylabel('True Positive rate')
+    ax.set_title('ROC Curve')
+
+    return fig, ax
