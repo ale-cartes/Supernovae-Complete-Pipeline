@@ -303,6 +303,7 @@ def curves_augmentation(curves_preprocessed):
 
     combinations = []
     bands = ['g ', 'r ', 'i ', 'z ']
+    columns = [col for col in curves_preprocessed.columns if col not in bands]
 
     for r in range(2, len(bands) + 1):
         for subset in itertools.combinations(bands, r):
@@ -311,7 +312,7 @@ def curves_augmentation(curves_preprocessed):
     df_augmentation = pd.DataFrame([])
 
     for combination in combinations:
-        cols = ['Days', *combination]
+        cols = [*columns, *combination]
         df_augmentation = pd.concat([df_augmentation,
                                      curves_preprocessed[cols]],
                                     ignore_index=True)

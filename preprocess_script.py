@@ -3,7 +3,6 @@ from utils import *
 
 # requesting for data augmentation and save
 normalize = (input("Do data normalization?[y/n] ") == 'y')
-aug_input = (input("Do data augmentation? [y/n] ") == 'y')
 save_input = (input("save data? [y/n] ") == 'y')
 
 # searching for files and folders
@@ -22,21 +21,13 @@ nonIa_summary = summary(nonIa_head)
 print('n° Ia curves:', summary(Ia_head)['SNTYPE'].size)
 print('nonIa types:', nonIa_summary['SNTYPE'].value_counts(), sep='\n')
 
-# preprocess the data
-if aug_input:
-    Ia_fitted = curves_augmentation(preprocess(Ia_DES_file, head_file=Ia_head,
-                                               normalize=normalize))
-    nonIa_fitted = curves_augmentation(preprocess(nonIa_DES_file,
-                                                  head_file=nonIa_head,
-                                                  normalize=normalize))
-
-else:
-    Ia_fitted = preprocess(Ia_DES_file, head_file=Ia_head, normalize=normalize)
-    nonIa_fitted = preprocess(nonIa_DES_file, head_file=nonIa_head,
-                              normalize=normalize)
+# preprocessing
+Ia_fitted = preprocess(Ia_DES_file, head_file=Ia_head,
+                       normalize=normalize, w_power=2)
+nonIa_fitted = preprocess(nonIa_DES_file, head_file=nonIa_head,
+                          normalize=normalize, w_power=2)
 
 curves_fitted = pd.concat((Ia_fitted, nonIa_fitted), ignore_index=True)
-curves_fitted = replace_nan_array(curves_fitted)
 
 # one-hot encoder: 1 -> Ia, 0 -> nonIa
 types = [1 if j < len(Ia_fitted) else 0 for j in range(len(curves_fitted))]
@@ -53,10 +44,6 @@ if save_input:
     if normalize:
         file_name += '_norm'
         file_types += '_norm'
-
-    if aug_input:
-        file_name += '_aug'
-        file_types += '_aug'
     
     file_name += '.npy'
     file_types += '.npy'
