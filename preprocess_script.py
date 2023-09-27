@@ -10,7 +10,8 @@ path = os.getcwd()
 curves_dir = "Lightcurves/curves"
 
 Ia_DES_file = os.path.join(curves_dir, 'Ia', 'DES', 'DES_Ia_PHOT.FITS')
-nonIa_DES_file = os.path.join(curves_dir, 'nonIa', 'DES', 'DES_nonIa_PHOT.FITS')
+nonIa_DES_file = os.path.join(
+    curves_dir, 'nonIa', 'DES', 'DES_nonIa_PHOT.FITS')
 
 Ia_head = os.path.join(curves_dir, 'Ia', 'DES', 'DES_Ia_HEAD.FITS')
 nonIa_head = os.path.join(curves_dir, 'nonIa', 'DES', 'DES_nonIa_HEAD.FITS')
@@ -22,31 +23,28 @@ print('n° Ia curves:', summary(Ia_head)['SNTYPE'].size)
 print('nonIa types:', nonIa_summary['SNTYPE'].value_counts(), sep='\n')
 
 # preprocessing
-Ia_fitted = preprocess(Ia_DES_file, head_file=Ia_head,
-                       normalize=normalize, w_power=2)
-nonIa_fitted = preprocess(nonIa_DES_file, head_file=nonIa_head,
-                          normalize=normalize, w_power=2)
+w_power = 2  # eror weight power
+Ia_preproccesed = preprocess(Ia_DES_file, head_file=Ia_head,
+                             normalize=normalize, w_power=w_power)
+nonIa_preproccesed = preprocess(nonIa_DES_file, head_file=nonIa_head,
+                                normalize=normalize, w_power=w_power)
 
-curves_fitted = pd.concat((Ia_fitted, nonIa_fitted), ignore_index=True)
+curves_preproccesed = pd.concat((Ia_preproccesed, nonIa_preproccesed),
+                                ignore_index=True)
 
 # one-hot encoder: 1 -> Ia, 0 -> nonIa
-types = [1 if j < len(Ia_fitted) else 0 for j in range(len(curves_fitted))]
-curves_fitted['Type'] = types
+types = [1 if j < len(Ia_preproccesed) else 0 
+         for j in range(len(curves_preproccesed))]
 
-# give Neural Network format to the data
-curves_RNN, types_RNN = RNN_reshape(curves_fitted)
+curves_preproccesed['Type'] = types
 
 # save the data
 if save_input:
-    file_name = './data_folder/curves_RNN'
-    file_types = './data_folder/types_RNN'
+    file_name = './data_folder/curves_preprocessed'
 
     if normalize:
         file_name += '_norm'
-        file_types += '_norm'
-    
-    file_name += '.npy'
-    file_types += '.npy'
 
-    np.save(file_name, curves_RNN)
-    np.save(file_types, types_RNN)
+    file_name += '.parquet'
+
+    curves_preproccesed.to_parquet(file_name)

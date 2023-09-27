@@ -295,6 +295,10 @@ def curves_augmentation(curves_preprocessed):
     r  i
     r  z
     i  z
+    g
+    r
+    i
+    z
 
     Input
     =====
@@ -305,7 +309,7 @@ def curves_augmentation(curves_preprocessed):
     bands = ['g ', 'r ', 'i ', 'z ']
     columns = [col for col in curves_preprocessed.columns if col not in bands]
 
-    for r in range(2, len(bands) + 1):
+    for r in range(1, len(bands) + 1):
         for subset in itertools.combinations(bands, r):
             combinations.append(subset)
 
