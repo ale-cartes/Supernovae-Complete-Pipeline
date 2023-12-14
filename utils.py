@@ -313,14 +313,13 @@ def curves_augmentation(curves_preprocessed):
         for subset in itertools.combinations(bands, r):
             combinations.append(subset)
 
-    df_augmentation = pd.DataFrame([])
+    dfs = []
 
     for combination in combinations:
         cols = [*columns, *combination]
-        df_augmentation = pd.concat([df_augmentation,
-                                     curves_preprocessed[cols]],
-                                    ignore_index=True)
+        dfs.append(curves_preprocessed[cols])
 
+    df_augmentation = pd.concat(dfs, ignore_index=True)
     return df_augmentation
 
 
@@ -328,17 +327,10 @@ def replace_nan_array(df_with_nan, array=np.zeros(100)):
     """
     Function that replace NaN values in a Data Frame by an array
     """
-    df_without_nan = df_with_nan.copy()
-    for column_name, column in df_with_nan.items():
-        if not np.any(column.isna()):
-            continue
 
-        column_copy = column.copy()
-        for i, content in enumerate(column):
-            if np.any(np.isnan(content)):
-                column_copy[i] = array
-
-        df_without_nan[column_name] = column_copy
+    df_without_nan = df_with_nan.applymap(lambda x: array
+                                          if np.array(pd.isnull(x)).any()
+                                          else x)
     return df_without_nan
 
 
@@ -542,10 +534,12 @@ def plot_roc_curve(test_data, pred_data, auc_print=False):
         print(f'AUC = {auc(fpr, tpr)}')
 
     fig, ax = plt.subplots()
-    ax.plot([0, 1], [0, 1], 'r--')
-    ax.plot(fpr, tpr, marker='o')
+    ax.plot([0, 1], [0, 1], 'r--', label='Random classifier')
+    ax.plot(fpr, tpr, '-.')
+
     ax.set_xlabel('False Positive rate')
     ax.set_ylabel('True Positive rate')
     ax.set_title('ROC Curve')
 
+    ax.legend(loc='lower right')
     return fig, ax
