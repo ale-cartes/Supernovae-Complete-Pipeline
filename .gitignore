@@ -10,6 +10,8 @@ A-Moller sim/Ia
 A-Moller sim/nonIa
 A-Moller sim/*FITRES
 Lightcurves/curves/
+sn_pipeline_env/
 
 sandbox.ipynb
+.vscode
 .gitignore
