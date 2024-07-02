@@ -16,7 +16,6 @@ from keras.layers import SimpleRNN, GRU, LSTM,\
                          Dense, Bidirectional, Dropout,\
                          Flatten, BatchNormalization,\
                          Input, concatenate, Add
-from keras.utils import plot_model
 from keras.callbacks import EarlyStopping
 from keras.metrics import BinaryAccuracy
 import pickle
@@ -25,7 +24,7 @@ import pyhopper
 seed = 42
 keras.utils.set_random_seed(seed)
 
-def fitter_Bspline(curve, band, t_ev, order=5, w_power=1):
+def fitter_Bspline(curve, t_ev, order=5, w_power=1, normalize=True):
     """
     Function that interpolate data using B-splines and then
     evaluates it at a specific time
@@ -34,9 +33,6 @@ def fitter_Bspline(curve, band, t_ev, order=5, w_power=1):
     =====
     curve: pd.dataFrame
         light curve data Frame
-
-    band: str
-        band of observation to be interpolated
 
     t_ev: np.array
         time at which the B-spline is evaluated
@@ -47,14 +43,19 @@ def fitter_Bspline(curve, band, t_ev, order=5, w_power=1):
     w_power: int (optional, default=1)
         power of the weight applicated to the incerteinty related to the fluxes
     """
-    curve_band = curve[curve.BAND == band]
-
-    time = curve_band.days
-    flux = curve_band.FLUXCAL
-    fluxerr = curve_band.FLUXCALERR
+    
+    time = curve.days
+    flux = curve.FLUXCAL
+    fluxerr = curve.FLUXCALERR
 
     spl = splrep(time, flux, w=1/(fluxerr ** w_power), k=order)
     flux_fit = splev(t_ev, spl)
+    
+    if np.isnan(flux_fit).any():
+        flux_fit = np.zeros(t_ev.shape)
+
+    if normalize:
+        flux_fit /= np.max(np.abs(flux_fit))
 
     return flux_fit
 
@@ -146,7 +147,8 @@ class SN_data:
         days = self.lc_df.MJD - self.lc_df.PEAKMJD
         self.lc_df['days'] = days
 
-    def preprocess(self, min_obs=5, w_power=1, len_seq=100, z_host=True):
+    def preprocess(self, min_obs=5, w_power=1, len_seq=100, z_host=True,
+                   normalize=True):
         """
         Function that interpolates light curves, discarding curves that contain
         less than a certain amount of observation.
@@ -184,7 +186,9 @@ class SN_data:
                                  for band in self.bands])
             day_max = np.nanmin([curve[curve.BAND == band].days.max()
                                  for band in self.bands])
+            
             t_ev = np.linspace(day_min, day_max, len_seq)
+
             dict_curve_fitted = {"days": t_ev}
 
             if ('SIM_REDSHIFT_HOST' in curve.columns) and z_host:
@@ -203,8 +207,10 @@ class SN_data:
                     flux_fitted = zero_array
 
                 else:
-                    flux_fitted = fitter_Bspline(curve, band, t_ev, 
-                                                 order=min_obs, w_power=w_power)
+                    flux_fitted = fitter_Bspline(band_data, t_ev, 
+                                                 order=min_obs,
+                                                 w_power=w_power,
+                                                 normalize=normalize)
 
                 dict_curve_fitted[band] = flux_fitted
 
@@ -298,11 +304,15 @@ class SN_data:
         return fig, ax
 
 class NN_classifier:
-    def __init__(self, sn_classes):
+    def __init__(self, sn_classes, name=None):
         data = pd.concat([sn_class.lc_fitted for sn_class in sn_classes])
         data['obs'] = data.index
         data.reset_index(inplace=True, drop=True)
         self.data = data
+        self.name = name
+    
+    def data_sample(self, frac, seed=42):
+        self.data = self.data.sample(frac=frac, random_state=seed)
 
     def plotter(self, index):
         """
@@ -401,7 +411,8 @@ class NN_classifier:
                             activations_i=[1, 1, 1],
                             init_weights_i=[0, 0, 0],
                             dropout=0.2,
-                            optimizer=optimizers.Adam, lr=1e-3):
+                            optimizer=optimizers.Adam, lr=1e-3,
+                            plot_model=False):
 
         n = len(rnns_i) if n==None else n
         
@@ -442,6 +453,11 @@ class NN_classifier:
         self.model = model
         self.fit_hist = []
 
+        if plot_model:
+            folder = f"data_folder/images/model_{self.name}.pdf"
+            keras.utils.plot_model(self.model, to_file=folder,
+                                   show_shapes=True)
+
         return model
         
     def model_fit(self, epochs=200, batch_size=8, plot=True,
@@ -478,7 +494,7 @@ class NN_classifier:
         obj_func = pyhopper.wrap_n_times(model_to_pyhopper, n=nwrap)
         pruner = pyhopper.pruners.QuantilePruner(pruner)
 
-        folder = "./data_folder/checkpoints/classifier.ckpt"
+        folder = f"./data_folder/checkpoints/classifier_{self.name}.ckpt"
         cktp_file = folder if (save or load) else None
 
         if load:
@@ -510,12 +526,11 @@ class NN_classifier:
             ax.grid(ls=':', alpha=0.4, zorder=0)
             ax.set(xlim=[0.5, len(search_params.history) + 0.5],
                    xlabel='Step',
-                   yscale='log',
                    ylabel='Validation Accuracy')
 
             ax.legend()
             
-            folder = "data_folder/images/pyhopper_opt_classifier.svg"
+            folder = f"data_folder/images/pyhopper_opt_classifier_{self.name}.svg"
             fig.savefig(folder, transparent=True, bbox_inches='tight')
 
         return best_params, batch_size
@@ -526,7 +541,7 @@ class NN_classifier:
         val_preds = []
         test_preds = []
         
-        file = "./data_folder/weights/classifier_weights.pkl"
+        file = f"./data_folder/weights/classifier_weights_{self.name}.pkl"
         if load:
             file_weights = open(file, "rb")
             weights, fit_hist = pickle.load(file_weights)
@@ -622,11 +637,11 @@ class NN_classifier:
                     ax[index].set_title(title)
 
         ax[0].set_ylim(-0, 1)
-        ax[0].set_ylabel('Loss')
+        ax[0].set_ylabel('Accuracy / Loss')
         fig.suptitle(f"Train History")
         fig.subplots_adjust(wspace=0.05)
 
-        folder = "data_folder/images/train_loss_classifier.svg"
+        folder = f"data_folder/images/train_loss_classifier_{self.name}.svg"
         fig.savefig(folder, transparent=True, bbox_inches='tight')
 
         return fig, ax
@@ -695,7 +710,7 @@ class NN_classifier:
         fig.suptitle('ROC Curve')
         fig.subplots_adjust(wspace=0.05)
 
-        folder = "data_folder/images/roc_curve_classifier.svg"
+        folder = f"data_folder/images/roc_curve_classifier_{self.name}.svg"
         fig.savefig(folder, transparent=True, bbox_inches='tight')
 
         return fig, ax
@@ -753,7 +768,80 @@ class NN_classifier:
         fig.suptitle('Confusion matrix')
         fig.subplots_adjust(wspace=0.05)
 
-        folder = "data_folder/images/confusion_matrix_classifier.svg"
+        folder = f"data_folder/images/confusion_matrix_classifier_{self.name}.svg"
         fig.savefig(folder, transparent=True, bbox_inches='tight')
 
         return fig, ax
+
+
+class ExternalData:
+    def __init__(self, sn_class, nn_class, name=None):
+        self.sn_class = sn_class
+        self.nn_class = nn_class
+        self.name = name
+
+    def model_prediction(self):
+        data = pd.concat([sn_class.lc_fitted
+                          for sn_class in self.sn_class])
+        
+        data_wo_types = data.drop(columns=['sn_type'])
+        data_reshaped = self.nn_class.NN_reshape(data_ext=data_wo_types)
+        
+        y_pred = self.nn_class.model.predict(data_reshaped)
+        self.y_pred = y_pred
+        
+        self.y_true = data['sn_type']
+    
+    def nan_checker(self):
+        nan_index = np.argwhere(np.isnan(self.y_pred))
+        mask = np.ones(self.y_pred.shape, dtype=bool)[:, 0]
+        mask[nan_index] = False
+        
+        if not mask.all():
+            print("There are NaN values in the prediction")
+        
+        self.y_pred = self.y_pred[mask]
+        self.y_true = self.y_true[mask]
+        
+    def plot_confusion_matrix(self, normalize=False):
+        """
+        Function that plots the Confusion Matrix for train, validation and
+        test data.
+
+        Input
+        =====
+        normalize: bool (optional)
+            if True, the confusion matrix will be normalized. Defaulte is False
+        """
+        self.nan_checker()
+        
+        classes = ['Ia', 'no Ia']
+
+        fig, ax = plt.subplots(figsize=(5, 5))
+
+        cm = confusion_matrix(y_true=self.y_true, y_pred=self.y_pred.round(),
+                              labels=[1, 0])
+
+        if normalize:
+            norm = cm.sum(axis=1)[:, np.newaxis]
+            cm = cm / norm
+
+        im = ax.imshow(cm, interpolation='nearest', cmap=plt.cm.Blues)
+        fig.colorbar(im, ax=ax, shrink=0.8)
+
+        tick_marks = np.arange(len(classes))
+        ax.set_xticks(tick_marks, classes, rotation=45)
+        ax.set_yticks(tick_marks, classes)
+
+        thresh = cm.max() / 2.
+        for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
+            ax.text(j, i,
+                    rf"${cm[i, j]:0.2f}$",
+                    horizontalalignment="center",
+                    color="white" if cm[i, j] > thresh else "black")
+
+        ax.set(xlabel='Predicted label', ylabel='True label')
+        ax.set_title('Confusion matrix' if self.name == None
+                     else f'Confusion matrix - {self.name}')
+        return fig, ax
+
