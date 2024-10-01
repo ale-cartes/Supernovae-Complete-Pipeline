@@ -20,6 +20,9 @@ from keras.callbacks import EarlyStopping
 from keras.metrics import BinaryAccuracy
 import pickle
 import pyhopper
+import multiprocessing as mp
+
+import sncosmo as snc
 
 seed = 42
 keras.utils.set_random_seed(seed)
@@ -59,11 +62,125 @@ def fitter_Bspline(curve, t_ev, order=5, w_power=1, normalize=True):
 
     return flux_fit
 
+def lc_fitter(data, model='salt3', plot=True, mcmc=True):
+    """
+    Function that fits a light curve using sncosmo library
+    
+    Input
+    =====
+    data: pd.DataFrame
+        light curve data Frame
+    
+    model: str (optional, default='salt3')
+        model used to fit the light curve
+    
+    plot: bool (optional, default=True)
+        if it's True, the light curve is plotted
+    
+    mcmc: bool (optional, default=True)
+        if it's True, the MCMC method is used to fit the light curve
+    
+    Output
+    =====
+    
+    result: sncosmo.FitResult
+        result of the fit
+    
+    fitted_model: sncosmo.Model
+        fitted model
+    """
+    
+    data = data.copy()
+    zpsys = ['ab'] * data.shape[0]
+    data['zpsys'] = zpsys
+    
+    data['BAND'] =  data.BAND.apply(lambda x: 'des' + x)
+    
+    data['flux'] = data.FLUXCAL
+    data['fluxerr'] = data.FLUXCALERR
+    
+    data = Table.from_pandas(data)
+    
+    model = snc.Model(source=model)
+    
+    z = data['REDSHIFT_FINAL'][0]
+    t0 = data['PEAKMJD'][0]
+    
+    model.set(z=z, t0=t0)
+    
+    func = snc.mcmc_lc if mcmc else snc.fit_lc
+        
+    result, fitted_model = func(data, model, ['x0', 'x1', 'c'])
+    
+    if plot:
+        snc.plot_lc(data, model=fitted_model, errors=result.errors)
+    
+    return result, fitted_model
+
 class SN_data:
+    """
+    Class for handling supernova data from FITS files. This class provides
+    methods to read, summarize, preprocess, and plot light curves data.
+
+    Attributes
+    ==========
+
+    phot_file: str
+        path to the photometry file
+
+    head_file: str
+        path to the head file
+
+    lc_df: pd.DataFrame
+        light curve data frame
+
+    obs_info: pd.DataFrame
+        observation information data frame
+
+    bands: list
+        list of bands used in the light curves
+
+    lc_fitted: pd.DataFrame
+        fitted light curve data frame
+
+    obs_discarded: list
+        list of observations discarded in the preprocessing
+
+    len_seq: int
+        number of points in the interpolation process
+
+    Methods
+    =======
+
+    reader(fits_header=False, band_col='BAND')
+        Function that reads fits files and return a light-curves
+        data frame
+
+    obs_summary()
+        Function that reads the head file containing supernova
+        data and sumarizes the SNTYPE column
+
+    mjd_to_days()
+        Function that transforms MJD dates to days considering
+        initial observation as day 0
+
+    peakmjd_to_days()
+        Function that transforms MJD dates to days, where day 0 corresponds to
+        the moment of the peak. Head file with peak information should be given
+        as attribute
+
+    preprocess(min_obs=5, w_power=1, len_seq=100, z_host=True, normalize=True)
+        Function that interpolates light curves, discarding curves that contain
+        less than a certain amount of observation.
+
+    plotter(obs, days=True, fitted=False)
+        Function that plots supernova light curve    
+    """
+
     def __init__(self, phot_file, head_file=None):
         self.phot_file = phot_file
         self.head_file = head_file
-    
+
     def reader(self, fits_header=False, band_col='BAND'):
         """
         Function that reads fits files and return a light-curves
@@ -92,10 +209,10 @@ class SN_data:
 
         light_curves['BAND'] = light_curves[band_col].str.decode('utf-8').str.strip()
         light_curves.name = self.phot_file.split('/')[-1]
-        
+
         self.lc_df = light_curves
         self.bands = light_curves.BAND.value_counts().keys()
-    
+
     def obs_summary(self):
         """
         Function that reads the head file containing supernova
@@ -211,6 +328,9 @@ class SN_data:
                                                  order=min_obs,
                                                  w_power=w_power,
                                                  normalize=normalize)
+                    
+                    if pd.isna(flux_fitted).any():
+                        flux_fitted = zero_array
 
                 dict_curve_fitted[band] = flux_fitted
 
@@ -304,8 +424,100 @@ class SN_data:
         return fig, ax
 
 class NN_classifier:
+    """
+    Class for handling Neural Network classifier for supernova data. This class
+    provides methods to preprocess, split data, train, evaluate, and plot the
+    classifier performance.
+    
+    Attributes
+    ==========
+    
+    sn_classes: list
+        list of SN_data classes
+    
+    name: str
+        name of the classifier
+    
+    data: pd.DataFrame
+        data frame with all the light curves
+    
+    X_train, X_val, X_test: pd.DataFrame
+        data frame with the features for training, validation and test data
+    
+    y_train, y_val, y_test: pd.DataFrame
+        data frame with the labels for training, validation and test data
+    
+    X_train_nn, X_val_nn, X_test_nn: np.array
+        numpy array with the features for training, validation and test data
+        with the shape (n_obs, n_seq, n_features)
+    
+    y_train_nn, y_val_nn, y_test_nn: np.array
+        numpy array with the labels for training, validation and test data
+        with the shape (n_obs, 1)
+    
+    model: keras.Model
+        Neural Network model
+    
+    fit_hist: list
+        list with the history of the training process
+    
+    train_stats, val_stats, test_stats: list
+        list with the mean and standard deviation of the predictions
+    
+    train_preds, val_preds, test_preds: np.array
+        numpy array with the predictions for training, validation and test data
+    
+    Methods
+    =======
+    
+    data_sample(frac, seed=42)
+        Function that samples the data
+    
+    train_test_split(train_size=0.7, val_size=0.15, rand_state=42)
+        Function that splits the data into training, validation and test data
+    
+    NN_reshape(data_ext=None)
+        Function that reshape the data in a way that the Neural Network can
+        work with those
+    
+    model_nl_creator_ph(n=None, rnns_i=[1, 1, 1], neurons=[8, 8, 8],
+                        activations_i=[1, 1, 1], init_weights_i=[0, 0, 0],
+                        dropout=0.2, optimizer=optimizers.Adam, lr=1e-3,
+                        plot_model=False)
+        Function that creates a Neural Network model with the given
+        hyperparameters using the Functional API of Keras
+    
+    model_fit(epochs=200, batch_size=8, plot=True, verbose=1, patience=15)
+        Function that fits the Neural Network model
+    
+    best_hyp_pyhopper(search_params, model_creator, time=None, steps=None,
+                      patience=15, plot_loss=False, plot_bf=True, verbose=0,
+                      epochs=250, nwrap=5, pruner=0.75, n_jobs=1, save=False,
+                      load=False)
+        Function that uses Pyhopper to find the best hyperparameters for the
+        Neural Network model
+    
+    model_statistics(num_it=10, batch_size=8, epochs=250, verbose_fit=0,
+                     patience=15, load=False)
+        Function that evaluates the Neural Network model in a certain number
+        of iterations  and returns the mean and standard deviation of the
+        predictions
+    
+    training_loss_plot()
+        Function that plots the training history of the Neural Network model
+    
+    plot_roc_curve()
+        Function that plots the ROC curve for train, validation and test data
+    
+    plot_confusion_matrix(normalize=False)
+        Function that plots the Confusion Matrix for train, validation and
+        test data
+    """
+
     def __init__(self, sn_classes, name=None):
         data = pd.concat([sn_class.lc_fitted for sn_class in sn_classes])
+        data = pd.concat([data, pd.DataFrame(columns=['g', 'r', 'i', 'z'])])
+        
         data['obs'] = data.index
         data.reset_index(inplace=True, drop=True)
         self.data = data
@@ -313,41 +525,6 @@ class NN_classifier:
     
     def data_sample(self, frac, seed=42):
         self.data = self.data.sample(frac=frac, random_state=seed)
-
-    def plotter(self, index):
-        """
-        Function that plots supernova light curve
-
-        Input
-        =====
-        obs: int
-            observation number
-        """
-
-        color = {'u': 'purple', 'g': 'green', 'r': 'red', 
-                 'i': (150/255, 0, 0), 'z': (60/255, 0, 0)}
-
-        data_obs = self.data[self.data.index == index]
-        data_obs = data_obs.dropna(axis=1)
-
-        if data_obs.empty:
-            print(f"Index: {index} was not found, try with another one")
-            return None
-
-        fig, ax = plt.subplots(figsize=(14, 8))
-
-        bands = data_obs.columns[[cols in color.keys() for cols in data_obs.columns]]
-        for band in bands:
-            ax.plot(*data_obs.days.values, *data_obs[band].values,
-                    color=color[band], label=band)
-
-        sn_type = 'Ia' if data_obs.sn_type.values[0] == 1 else 'noIa'
-        ax.set_title(f"SN type: {sn_type} - Obs: {data_obs.obs.values[0]}")
-        ax.set_xlabel('Days', fontsize=18)
-        ax.set_ylabel('Flux (ADU)', fontsize=18)
-        ax.grid(ls=':', alpha=0.3)
-        ax.legend()
-        return fig, ax
     
     def train_test_split(self, train_size=0.7, val_size=0.15, rand_state=42):
         data_wo_types = self.data.drop(columns=['sn_type', 'obs'])
@@ -746,10 +923,11 @@ class NN_classifier:
                 cm_mean = cm_mean / norm
                 cm_std = cm_std / norm
 
-            im = ax[i_l].imshow(cm_mean, interpolation='nearest', cmap=plt.cm.Blues)
+            im = ax[i_l].imshow(cm_mean, interpolation='nearest',
+                                cmap=plt.cm.Blues,
+                                vmin=0, vmax=1 if normalize else None)
             fig.colorbar(im, ax=ax[i_l], shrink=0.75)
-
-
+            
             tick_marks = np.arange(len(classes))
             ax[i_l].set_xticks(tick_marks, classes, rotation=45)
             ax[i_l].set_yticks(tick_marks, classes)
@@ -757,8 +935,11 @@ class NN_classifier:
             thresh = cm_mean.max() / 2.
             for i, j in itertools.product(range(cm_mean.shape[0]),
                                           range(cm_mean.shape[1])):
-                ax[i_l].text(j, i,
-                             rf"${cm_mean[i, j]:0.2f} \pm {cm_std[i, j]:0.2f}$",
+                if normalize:
+                    text =  rf"${cm_mean[i, j]:0.2f} \pm {cm_std[i, j]:0.2f}$"
+                else:
+                    text = rf"${int(cm_mean[i, j])} \pm {int(cm_std[i, j])}$"
+                ax[i_l].text(j, i, text,
                              horizontalalignment="center",
                              color="white" if cm_mean[i, j] > thresh else "black")
 
@@ -775,6 +956,31 @@ class NN_classifier:
 
 
 class ExternalData:
+    """
+    Class for handling external data for the Neural Network classifier. This class
+    provides methods to preprocess, predict, and plot the classifier performance.
+    
+    Attributes
+    ==========
+    
+    sn_class: list
+        list of SN_data classes
+    
+    nn_class: NN_classifier
+        Neural Network classifier
+    
+    name: str
+        name of the classifier
+    
+    y_pred: np.array
+        numpy array with the predictions
+    
+    y_true: np.array
+        numpy array with the true labels
+    
+    nan_index: np.array
+        numpy array with the index of NaN values
+    """
     def __init__(self, sn_class, nn_class, name=None):
         self.sn_class = sn_class
         self.nn_class = nn_class
@@ -783,30 +989,40 @@ class ExternalData:
     def model_prediction(self):
         data = pd.concat([sn_class.lc_fitted
                           for sn_class in self.sn_class])
+        data = pd.concat([data, pd.DataFrame(columns=['g', 'r', 'i', 'z'])],
+                         ignore_index=True)
         
         data_wo_types = data.drop(columns=['sn_type'])
-        data_reshaped = self.nn_class.NN_reshape(data_ext=data_wo_types)
         
+        if data_wo_types.isna().any().any():
+            len_seq = data.days[0].shape[0]
+            array = np.zeros(len_seq)
+            data_wo_types = data_wo_types.map(lambda x: array
+                                              if np.array(pd.isnull(x)).any()
+                                              else x)
+
+        data_reshaped = self.nn_class.NN_reshape(data_ext=data_wo_types)
+
         y_pred = self.nn_class.model.predict(data_reshaped)
         self.y_pred = y_pred
-        
+
         self.y_true = data['sn_type']
-    
+
     def nan_checker(self):
         nan_index = np.argwhere(np.isnan(self.y_pred))
         mask = np.ones(self.y_pred.shape, dtype=bool)[:, 0]
         mask[nan_index] = False
-        
+
         if not mask.all():
             print("There are NaN values in the prediction")
-        
+
+        self.nan_index = nan_index
         self.y_pred = self.y_pred[mask]
         self.y_true = self.y_true[mask]
-        
+
     def plot_confusion_matrix(self, normalize=False):
         """
-        Function that plots the Confusion Matrix for train, validation and
-        test data.
+        Function that plots the Confusion Matrix for external data
 
         Input
         =====
@@ -814,7 +1030,7 @@ class ExternalData:
             if True, the confusion matrix will be normalized. Defaulte is False
         """
         self.nan_checker()
-        
+
         classes = ['Ia', 'no Ia']
 
         fig, ax = plt.subplots(figsize=(5, 5))
@@ -822,11 +1038,12 @@ class ExternalData:
         cm = confusion_matrix(y_true=self.y_true, y_pred=self.y_pred.round(),
                               labels=[1, 0])
 
+        norm = cm.sum(axis=1)[:, np.newaxis]
         if normalize:
-            norm = cm.sum(axis=1)[:, np.newaxis]
             cm = cm / norm
 
-        im = ax.imshow(cm, interpolation='nearest', cmap=plt.cm.Blues)
+        im = ax.imshow(cm, interpolation='nearest', cmap=plt.cm.Blues, vmin=0,
+                       vmax=1 if normalize else None)
         fig.colorbar(im, ax=ax, shrink=0.8)
 
         tick_marks = np.arange(len(classes))
@@ -835,8 +1052,8 @@ class ExternalData:
 
         thresh = cm.max() / 2.
         for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
-            ax.text(j, i,
-                    rf"${cm[i, j]:0.2f}$",
+            text = rf"${cm[i, j]:0.2f}$" if normalize else rf"{cm[i, j]}"
+            ax.text(j, i, text,
                     horizontalalignment="center",
                     color="white" if cm[i, j] > thresh else "black")
 
