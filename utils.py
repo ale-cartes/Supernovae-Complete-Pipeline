@@ -30,6 +30,8 @@ import corner
 
 from numba import njit
 
+from IPython.display import display, Math
+
 seed = 42
 keras.utils.set_random_seed(seed)
 
@@ -1123,6 +1125,35 @@ def lc_fitter(data, model='salt3', plot=True, mcmc=False,
 
 def lc_fit_summary(data, band, model='salt3', mcmc=False, instrument='des',
                    dust=True):
+    """
+    Function that fits a light curve using sncosmo library and returns a
+    summary of the fit for each observation in the data.
+
+    Input
+    =====
+    data: pd.DataFrame
+        light curve data Frame
+
+    band: str or sncosmo bandpass
+        band used to fit the light curve
+
+    model: str (optional, default='salt3')
+        model used to fit the light curve
+
+    mcmc: bool (optional, default=False)
+        if it's True, the fit is done using MCMC
+
+    instrument: str (optional, default='des')
+        instrument used to obtain the data
+
+    Output
+    =====
+    data_summary: pd.DataFrame
+        summary of the fit for each observation in the data
+
+    obs_err: list
+        list with the index of the observations that could not be fitted
+    """
     zpsys = 'AB'
     zp = 27.5
 
@@ -1375,3 +1406,32 @@ def distance_modulus(z, omega_m, omega_de, omega_r=0, w_0=-1, w_a=0, h=None):
         lum_dist *= c / H0
 
     return 5 * np.log10(lum_dist) + 25  # luminosity distance in Mpc
+
+
+def summarize_mcmc(flat_samples, labels):
+    """
+    Summarize MCMC results, compute percentiles, and display formatted LaTeX.
+
+    Inputs:
+    =======
+    
+    flat_samples:
+        Flattened MCMC chain samples of shape (n_samples, n_params)
+    
+    labels:
+        List of LaTeX labels for each parameter
+
+    Output:
+    =======
+    Array of computed percentiles for each parameter.
+    """
+    ndim = flat_samples.shape[1]
+    # Compute 25th, 50th, 75th percentiles
+    mcmc = np.percentile(flat_samples, [25, 50, 75], axis=0).T
+
+    for i in range(ndim):
+        difs = np.diff(mcmc[i])
+        inf, sup = difs
+        txt = (f"{labels[i]} = "
+               f"${mcmc[i, 1]:.3f}_{{-{inf:.3f}}}^{{+{sup:.3f}}}")
+        display(Math(txt))
