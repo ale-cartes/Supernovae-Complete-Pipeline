@@ -1,9 +1,7 @@
 *__pycache__
 *ipynb_checkpoints
 *.npy
-*.pkl
 *.parquet
-*.h5
 
 
 A-Moller sim/Ia

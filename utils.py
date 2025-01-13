@@ -679,8 +679,8 @@ class NN_classifier:
 
             ax.legend()
 
-            folder = (f"data_folder/images/"
-                      "pyhopper_opt_classifier_{self.name}.svg")
+            folder = ("data_folder/images/"
+                      f"pyhopper_opt_classifier_{self.name}.svg")
             fig.savefig(folder, transparent=True, bbox_inches='tight')
 
         return best_params, batch_size
@@ -925,8 +925,8 @@ class NN_classifier:
         fig.suptitle('Confusion matrix')
         fig.subplots_adjust(wspace=0.05)
 
-        folder = (f"data_folder/images/"
-                  "confusion_matrix_classifier_{self.name}.svg")
+        folder = ("data_folder/images/"
+                  f"confusion_matrix_classifier_{self.name}.svg")
         fig.savefig(folder, transparent=True, bbox_inches='tight')
 
         return fig, ax
