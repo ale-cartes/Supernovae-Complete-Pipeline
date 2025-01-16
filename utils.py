@@ -174,7 +174,7 @@ class SN_data:
         light_curves.name = self.phot_file.split('/')[-1]
 
         self.lc_df = light_curves
-        self.bands = light_curves.BAND.value_counts().keys()
+        self.bands = light_curves.BAND.unique()
 
     def obs_summary(self):
         """
@@ -644,16 +644,17 @@ class NN_classifier:
         pruner = pyhopper.pruners.QuantilePruner(pruner)
 
         folder = f"./data_folder/checkpoints/classifier_{self.name}.ckpt"
-        cktp_file = folder if (save or load) else None
 
         if load:
-            time = None
-            steps = 0
+            search_params.load(folder)
+            best_params = search_params.best
 
-        best_params = search_params.run(obj_func, 'max',
-                                        steps=steps, runtime=time,
-                                        pruner=pruner, n_jobs=n_jobs,
-                                        checkpoint_path=cktp_file)
+        else:
+            cktp_file = folder if save else None
+            best_params = search_params.run(obj_func, 'max',
+                                            steps=steps, runtime=time,
+                                            pruner=pruner, n_jobs=n_jobs,
+                                            checkpoint_path=cktp_file)
 
         print(f"Best params: {best_params}")
 
@@ -664,11 +665,13 @@ class NN_classifier:
         if plot_bf:
             fig, ax = plt.subplots(figsize=(8, 5))
 
-            x = np.array(search_params.history.steps) + 1
-            ax.scatter(x=x, y=search_params.history.fs,
-                       label="Sampled")
+            steps = np.array(search_params.history.steps) + 1
+            fs = search_params.history.fs
+            print(f"Steps: {max(steps)} - Best fs: {max(fs):0.3}")
 
-            ax.plot(x, search_params.history.best_fs,
+            ax.scatter(x=steps, y=fs, label="Sampled")
+
+            ax.plot(steps, search_params.history.best_fs,
                     ls='--', color="red",
                     label="Best so far", zorder=0)
 
