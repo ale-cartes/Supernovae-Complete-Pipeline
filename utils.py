@@ -446,10 +446,10 @@ class NN_classifier:
         Function that reshape the data in a way that the Neural Network can
         work with those
 
-    model_nl_creator_ph(n=None, rnns_i=[1, 1, 1], neurons=[8, 8, 8],
-                        activations_i=[1, 1, 1], init_weights_i=[0, 0, 0],
-                        dropout=0.2, optimizer=optimizers.Adam, lr=1e-3,
-                        plot_model=False)
+    model_nl_creator(n=None, rnns_i=[1, 1, 1], neurons=[8, 8, 8],
+                     activations_i=[1, 1, 1], init_weights_i=[0, 0, 0],
+                     dropout=0.2, optimizer=optimizers.Adam, lr=1e-3,
+                     plot_model=False)
         Function that creates a Neural Network model with the given
         hyperparameters using the Functional API of Keras
 
@@ -556,12 +556,49 @@ class NN_classifier:
         else:
             return func(data_ext)
 
-    def model_nl_creator_ph(self, n=None, rnns_i=[1, 1, 1], neurons=[8, 8, 8],
-                            activations_i=[1, 1, 1],
-                            init_weights_i=[0, 0, 0],
-                            dropout=0.2,
-                            optimizer=optimizers.Adam, lr=1e-3,
-                            plot_model=False):
+    def model_nl_creator(self, n=None, rnns_i=[1, 1, 1], neurons=[8, 8, 8],
+                         activations_i=[1, 1, 1],
+                         init_weights_i=[0, 0, 0],
+                         dropout=0.2,
+                         optimizer=optimizers.Adam, lr=1e-3,
+                         plot_model=False):
+        """
+        Function that creates a Neural Network model with the given
+        hyperparameters using the Functional API of Keras
+
+        Input
+        =====
+        n: int (optional, default=None)
+            number of layers of the Neural Network
+
+        rnns_i: list (optional, default=[1, 1, 1])
+            list with the index of the RNNs to be used in the model.
+            0: SimpleRNN, 1: LSTM, 2: GRU
+
+        neurons: list (optional, default=[8, 8, 8])
+            list with the number of neurons for each layer
+
+        activations_i: list (optional, default=[1, 1, 1])
+            list with the index of the activation functions to be used in
+            the model.
+            0: linear, 1: tanh, 2: relu, 3: sigmoid, 4: softmax
+
+        init_weights_i: list (optional, default=[0, 0, 0])
+            list with the index of the initializers to be used in the model.
+            0: he_uniform, 1: RandomUniform, 2: GlorotUniform
+
+        dropout: float (optional, default=0.2)
+            dropout rate
+
+        optimizer: keras.optimizers (optional, default=optimizers.Adam)
+            optimizer to be used in the model
+
+        lr: float (optional, default=1e-3)
+            learning rate
+
+        plot_model: bool (optional, default=False)
+            if it is True, the model will be plotted
+        """
 
         n = len(rnns_i) if n is None else n
 
@@ -611,6 +648,27 @@ class NN_classifier:
 
     def model_fit(self, epochs=200, batch_size=8, plot=True,
                   verbose=1, patience=15):
+        """
+        Function that fits the Neural Network model with the given
+        hyperparameters
+
+        Input
+        =====
+        epochs: int (optional, default=200)
+            number of epochs
+
+        batch_size: int (optional, default=8)
+            batch size
+
+        plot: bool (optional, default=True)
+            if it is True, the training history will be plotted
+
+        verbose: int (optional, default=1)
+            verbose level
+
+        patience: int (optional, default=15)
+            patience for the early stopping
+        """
 
         early_stopping = EarlyStopping(monitor='val_loss', patience=patience)
 
@@ -624,11 +682,71 @@ class NN_classifier:
         if plot:
             self.training_loss_plot()
 
-    def best_hyp_pyhopper(self, search_params, model_creator,
+    def best_hyp_pyhopper(self, model_creator, search_params=None,
                           time=None, steps=None, patience=15,
                           plot_loss=False, plot_bf=True, verbose=0,
                           epochs=250, nwrap=5, pruner=0.75,
-                          n_jobs=1, save=False, load=False):
+                          n_jobs=1, save=False, load=True):
+        """
+        Function that uses Pyhopper to find the best hyperparameters for the
+        Neural Network model
+
+        Input
+        =====
+        model_creator: function
+            function that creates the Neural Network model
+
+        search_params: pyhopper.Search (if load is False this parameter must be
+        provided)
+            search parameters for the Pyhopper
+
+        time: int (optional, default=None)
+            time in pyhopper format for the optimization
+
+        steps: int (optional, default=None)
+            number of steps for the optimization
+
+        patience: int (optional, default=15)
+            patience for the early stopping
+
+        plot_loss: bool (optional, default=False)
+            if it is True, the loss will be plotted
+
+        plot_bf: bool (optional, default=True)
+            if it is True, the best so far will be plotted
+
+        verbose: int (optional, default=0)
+            verbose level
+
+        epochs: int (optional, default=250)
+            number of epochs
+
+        nwrap: int (optional, default=5)
+            number of times the model will be wrapped
+
+        pruner: float (optional, default=0.75)
+            pruner for the Pyhopper
+
+        n_jobs: int (optional, default=1)
+            number of jobs for parallelization
+
+        save: bool (optional, default=False)
+            if it is True, the search parameters will be saved
+
+        load: bool (optional, default=True)
+            if it is True, the search parameters will be loaded
+
+        Output
+        =====
+        best_params: dict
+            best hyperparameters for the Neural Network model
+
+        batch_size: int
+            best batch size for the Neural Network model
+        """
+        if not load and search_params is None:
+            print("If load is False, search_params must be provided")
+            return None
 
         def model_to_pyhopper(param_grid):
             model_creator(**{key: value for key, value in param_grid.items()
@@ -646,6 +764,7 @@ class NN_classifier:
         folder = f"./data_folder/checkpoints/classifier_{self.name}.ckpt"
 
         if load:
+            search_params = pyhopper.Search()
             search_params.load(folder)
             best_params = search_params.best
 
@@ -690,6 +809,31 @@ class NN_classifier:
 
     def model_statistics(self, num_it=10, batch_size=8, epochs=250,
                          verbose_fit=0, patience=15, load=False):
+        """
+        Function that evaluates the Neural Network model in a certain number
+        of iterations and returns the mean and standard deviation of the
+        predictions
+
+        Input
+        =====
+        num_it: int (optional, default=10)
+            number of iterations
+
+        batch_size: int (optional, default=8)
+            batch size
+
+        epochs: int (optional, default=250)
+            number of epochs
+
+        verbose_fit: int (optional, default=0)
+            verbose level
+
+        patience: int (optional, default=15)
+            patience for the early stopping
+
+        load: bool (optional, default=False)
+            if it is True, the weights will be loaded
+        """
         train_preds = []
         val_preds = []
         test_preds = []
@@ -757,6 +901,10 @@ class NN_classifier:
         self.test_preds = np.array(test_preds)
 
     def training_loss_plot(self):
+        """
+        Function that plots the training history of the Neural Network model
+        """
+
         keys = self.fit_hist[0].history.keys()
         ncols = len(keys) // 2
 
@@ -1417,10 +1565,10 @@ def summarize_mcmc(flat_samples, labels):
 
     Inputs:
     =======
-    
+
     flat_samples:
         Flattened MCMC chain samples of shape (n_samples, n_params)
-    
+
     labels:
         List of LaTeX labels for each parameter
 
