@@ -1,8 +1,13 @@
 import numpy as np
-import matplotlib.pyplot as plt
 import pandas as pd
+
+import matplotlib.pyplot as plt
+import scienceplots
+plt.style.use(['science', 'bright'])
+
 from astropy.table import Table
 from astropy.io import fits
+
 from scipy.interpolate import splrep, splev
 from sklearn.metrics import confusion_matrix, roc_curve, auc
 from sklearn.model_selection import train_test_split
@@ -20,7 +25,6 @@ from keras.callbacks import EarlyStopping
 from keras.metrics import BinaryAccuracy
 import pickle
 import pyhopper
-import multiprocessing as mp
 
 import sncosmo as snc
 import scipy.integrate as integrate
@@ -173,7 +177,8 @@ class SN_data:
                                 )
         light_curves.name = self.phot_file.split('/')[-1]
 
-        self.lc_df = light_curves
+        # non-detected points (PHOTFLAG == 0) are discarded
+        self.lc_df = light_curves[light_curves['PHOTFLAG'] != 0] 
         self.bands = light_curves.BAND.unique()
 
     def obs_summary(self):
