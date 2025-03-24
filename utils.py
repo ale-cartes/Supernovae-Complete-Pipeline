@@ -3,7 +3,7 @@ import pandas as pd
 
 import matplotlib.pyplot as plt
 import scienceplots
-plt.style.use(['science', 'bright'])
+plt.style.use(['science', 'ieee'])
 
 from astropy.table import Table
 from astropy.io import fits
@@ -904,6 +904,8 @@ class NN_classifier:
         self.train_preds = np.array(train_preds)
         self.val_preds = np.array(val_preds)
         self.test_preds = np.array(test_preds)
+        
+        self.NN_weights = weights
 
     def training_loss_plot(self):
         """
@@ -1101,48 +1103,84 @@ class ExternalData:
         list of SN_data classes
 
     nn_class: NN_classifier
-        Neural Network classifier
+        Neural Network classifier class
 
-    name: str
-        name of the classifier
+    load_weights_model(i=0):
+        Function that loads the weights of the Neural Network classifier
+        calculated in the training process using model_statistics method
+        from the nn_class
 
     y_pred: np.array
         numpy array with the predictions
 
-    y_true: np.array
+    y_true: np.array (if available)
         numpy array with the true labels
 
     nan_index: np.array
         numpy array with the index of NaN values
     """
-    def __init__(self, sn_class, nn_class, name=None):
+    def __init__(self, sn_class, nn_class):
         self.sn_class = sn_class
         self.nn_class = nn_class
-        self.name = name
+    
+    def load_weights_model(self, i=0):
+        """
+        Function that loads the weights of the Neural Network classifier
+        calculated in the training process using model_statistics method
+
+        Input
+        =====
+        i: int (optional, default=0)
+            index of the weights to be loaded
+        """
+        file = ("./data_folder/weights/"
+                f"classifier_weights_{self.nn_class.name}.pkl"
+                )
+        file_weights = open(file, "rb")
+        weights, fit_hist = pickle.load(file_weights)
+
+        if i > len(weights) - 1 or i < 0:
+            print(f"Index {i} is out of range, the last index is "
+                  f"{len(weights) - 1}")
+            return None
+
+        print(f"Weights loaded: {i} of {len(weights) - 1}")
+
+        self.nn_class.model.set_weights(weights[i])
+        file_weights.close()
 
     def model_prediction(self):
+        """
+        Function that predicts the labels for the external data considering
+        the NN model in nn_class
+        """
+
         data = pd.concat([sn_class.lc_fitted
                           for sn_class in self.sn_class])
         data = pd.concat([data, pd.DataFrame(columns=['g', 'r', 'i', 'z'])],
                          ignore_index=True)
 
-        data_wo_types = data.drop(columns=['sn_type'])
+        if 'sn_type' in data.columns:
+            self.y_true = data['sn_type']
+            data.drop(columns=['sn_type'], inplace=True)
 
-        if data_wo_types.isna().any().any():
+        if data.isna().any().any():
             len_seq = data.days[0].shape[0]
             array = np.zeros(len_seq)
-            data_wo_types = data_wo_types.map(lambda x: array
-                                              if np.array(pd.isnull(x)).any()
-                                              else x)
+            data = data.map(lambda x: array
+                            if np.array(pd.isnull(x)).any()
+                            else x)
 
-        data_reshaped = self.nn_class.NN_reshape(data_ext=data_wo_types)
+        data_reshaped = self.nn_class.NN_reshape(data_ext=data)
 
         y_pred = self.nn_class.model.predict(data_reshaped)
         self.y_pred = y_pred
 
-        self.y_true = data['sn_type']
-
     def nan_checker(self):
+        """
+        Function that checks if there are NaN values in the prediction
+        """
+
         nan_index = np.argwhere(np.isnan(self.y_pred))
         mask = np.ones(self.y_pred.shape, dtype=bool)[:, 0]
         mask[nan_index] = False
@@ -1152,7 +1190,9 @@ class ExternalData:
 
         self.nan_index = nan_index
         self.y_pred = self.y_pred[mask]
-        self.y_true = self.y_true[mask]
+        
+        if hasattr(self, 'y_true'):
+            self.y_true = self.y_true[mask]
 
     def plot_confusion_matrix(self, normalize=False):
         """
@@ -1192,8 +1232,7 @@ class ExternalData:
                     color="white" if cm[i, j] > thresh else "black")
 
         ax.set(xlabel='Predicted label', ylabel='True label')
-        ax.set_title('Confusion matrix' if self.name is None
-                     else f'Confusion matrix - {self.name}')
+        ax.set_title('Confusion matrix')
         return fig, ax
 
 
