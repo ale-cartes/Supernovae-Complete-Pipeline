@@ -133,7 +133,7 @@ def run_mcmc(data, best_params, nwalkers=50, nsteps=5000, load=False,
 if __name__ == "__main__":
     # Step 1: Load and preprocess data
     data = load_and_preprocess_data(file_fitted_data='classified_Ia_0.9.pkl',
-                                    file_nuisance='test_nuisance_low_z_3.h5',
+                                    file_nuisance='nuisance_low_z.h5',
                                     filter_mu=True, mu_err_max=1)
 
     data = data[data.z >= 0.1].sample(5_000, random_state=42)
@@ -147,7 +147,7 @@ if __name__ == "__main__":
     sampler = run_mcmc(data, best_params,
                        nwalkers=nwalkers, nsteps=nsteps,
                        load=True,
-                       filename="test_flat_wcdm_2.h5")
+                       filename="flat_wcdm.h5")
 
     # Step 4: Plot results
     labels = [r'$\Omega_m$', r'$w$']

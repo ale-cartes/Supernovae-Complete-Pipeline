@@ -156,7 +156,7 @@ if __name__ == "__main__":
     sampler = run_mcmc(data, best_params,
                        nwalkers=nwalkers, nsteps=nsteps,
                        load=True,
-                       filename='test_nuisance_low_z_3.h5')
+                       filename='nuisance_low_z.h5')
 
     # Step 4: Plot results
     labels = [r'$\alpha$', r'$\beta$', r'$\gamma$']
