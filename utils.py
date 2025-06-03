@@ -34,6 +34,7 @@ import corner
 
 from numba import njit
 
+from getdist import plots, MCSamples
 from IPython.display import display, Math
 
 seed = 42
@@ -495,6 +496,21 @@ class NN_classifier:
         self.name = name
 
     def data_sample(self, frac, seed=42):
+        """
+        Function that samples the data with a certain fraction and seed
+
+        Input
+        =====
+        frac: float
+            fraction of the data to sample
+        
+        seed: int (optional, default=42)
+            seed for the random state
+        """
+        if frac < 0 or frac > 1:
+            print("Fraction must be between 0 and 1")
+            return None
+
         self.data = self.data.sample(frac=frac, random_state=seed)
 
     def train_test_split(self, train_size=0.7, val_size=0.15, rand_state=42):
@@ -1058,7 +1074,11 @@ class NN_classifier:
             im = ax[i_l].imshow(cm_mean, interpolation='nearest',
                                 cmap=plt.cm.Blues,
                                 vmin=0, vmax=1 if normalize else None)
-            fig.colorbar(im, ax=ax[i_l], shrink=0.75)
+
+            fmt = lambda x, pos: f'{int(x):,}'.replace(',', '.')
+            fmt_norm = lambda x, pos: f'{x:0.1f}'
+            fig.colorbar(im, ax=ax[i_l], shrink=0.75,
+                         format=fmt_norm if normalize else fmt)
 
             tick_marks = np.arange(len(classes))
             ax[i_l].set_xticks(tick_marks, classes, rotation=45)
@@ -1083,8 +1103,9 @@ class NN_classifier:
         fig.suptitle('Confusion matrix')
         fig.subplots_adjust(wspace=0.05)
 
+        file_name = f"{self.name}_norm" if normalize else self.name
         folder = ("data_folder/images/"
-                  f"confusion_matrix_classifier_{self.name}.svg")
+                  f"confusion_matrix_classifier_{file_name}.svg")
         fig.savefig(folder, transparent=True, bbox_inches='tight')
 
         return fig, ax
@@ -1176,6 +1197,59 @@ class ExternalData:
         y_pred = self.nn_class.model.predict(data_reshaped)
         self.y_pred = y_pred
 
+    def df_lc_class_Ia(self, prob_Ia=0.85, confusion_info=True):
+        if not hasattr(self, 'y_pred'):
+            self.model_prediction()
+        
+        df_all_lc = pd.DataFrame()
+        
+        for i, sn_class in enumerate(self.sn_class):
+            # obtain observations that were not discarded
+            obs_list = sn_class.lc_df.index
+            obs_mask = ~np.isin(obs_list, sn_class.obs_discarded)
+            df_lc = sn_class.lc_df.loc[obs_mask].copy()
+            
+            # modify index to avoid duplicates
+            max_index = df_all_lc.index.max() if not df_all_lc.empty else df_lc.index.max()
+            df_lc.index = np.array(df_lc.index) + (max_index + 1)
+
+            # concatenate all light curves
+            df_all_lc = pd.concat([df_all_lc, df_lc])
+        
+        size_y_pred = self.y_pred.shape[0]
+        size_df_lc = df_all_lc.index.unique().size
+        print(f"Size of y_pred: {size_y_pred} - Size of fitted LC: {size_df_lc}")
+        
+        if size_y_pred != size_df_lc:
+            print("The size of the prediction and the light curve data "
+                  "do not match")
+            return None
+        
+        index_classified_Ia = []
+        
+        for prob, obs in zip(self.y_pred, df_all_lc.index.unique()):
+            if prob > prob_Ia:
+                index_classified_Ia.append(obs)
+        
+        mask_index = np.isin(df_all_lc.index, index_classified_Ia)
+
+        if confusion_info:
+            if not hasattr(self, 'y_true'):
+                print("True labels are not available. Confusion info cannot be generated")
+            
+            else:
+                y_true = self.y_true
+                y_pred = self.y_pred
+                y_pred = y_pred.reshape(len(y_pred))
+
+                confusion_df = pd.DataFrame({'true': y_true, 'predicted': y_pred.flatten()})
+                filtered_df = confusion_df.loc[confusion_df['predicted'] > prob_Ia, 'true']
+                filtered_df = filtered_df.replace({1: 'Ia', 0: 'noIa'})
+                
+                print(f"SN classified as Ia with probability > {prob_Ia} contains:", filtered_df.value_counts())
+
+        return df_all_lc[mask_index]
+
     def nan_checker(self):
         """
         Function that checks if there are NaN values in the prediction
@@ -1194,7 +1268,7 @@ class ExternalData:
         if hasattr(self, 'y_true'):
             self.y_true = self.y_true[mask]
 
-    def plot_confusion_matrix(self, normalize=False):
+    def plot_confusion_matrix(self, normalize=False, prob_Ia=0):
         """
         Function that plots the Confusion Matrix for external data
 
@@ -1205,9 +1279,15 @@ class ExternalData:
         """
         self.nan_checker()
 
+        if not hasattr(self, 'y_true'):
+            print("True labels are not available. Confusion matrix cannot be generated")
+            return None
+
         classes = ['Ia', 'no Ia']
 
         fig, ax = plt.subplots(figsize=(5, 5))
+
+        y_pred = self.y_pred.reshape(len(self.y_pred))
 
         cm = confusion_matrix(y_true=self.y_true, y_pred=self.y_pred.round(),
                               labels=[1, 0])
@@ -1239,7 +1319,7 @@ class ExternalData:
 # Cosmology
 
 
-def lc_fitter(data, model='salt3', plot=True, mcmc=False,
+def lc_fitter(data, zp=27.5, zpsys='AB', model='salt3', plot=True, mcmc=False,
               instrument='des', dust=True):
     """
     Function that fits a light curve using sncosmo library
@@ -1273,9 +1353,9 @@ def lc_fitter(data, model='salt3', plot=True, mcmc=False,
     # Preprocessing data for snocosmo
     data = data.copy()
 
-    zpsys = ['AB'] * data.shape[0]
+    zpsys = [zpsys] * data.shape[0]
     data['zpsys'] = zpsys
-    data['ZEROPT'] = [27.5] * data.shape[0]
+    data['ZEROPT'] = [zp] * data.shape[0]
 
     if 'FLT' in data.columns:
         data.drop(columns=['FLT'], inplace=True)
@@ -1313,13 +1393,14 @@ def lc_fitter(data, model='salt3', plot=True, mcmc=False,
 
     if plot:
         snc.plot_lc(data, model=fitted_model, errors=result.errors,
-                    zp=27.5)
+                    zp=zp)
 
     return result, fitted_model
 
 
-def lc_fit_summary(data, band, model='salt3', mcmc=False, instrument='des',
-                   dust=True):
+def lc_fit_summary(data, band,
+                   zpsys='AB', zp=27.5, model='salt3', mcmc=False,
+                   instrument='des', dust=True):
     """
     Function that fits a light curve using sncosmo library and returns a
     summary of the fit for each observation in the data.
@@ -1349,70 +1430,94 @@ def lc_fit_summary(data, band, model='salt3', mcmc=False, instrument='des',
     obs_err: list
         list with the index of the observations that could not be fitted
     """
-    zpsys = 'AB'
-    zp = 27.5
 
-    m_B, mabs_B = [], []
-    x0, x0_err = [], []
-    x1, x1_err = [], []
-    c, c_err = [], []
-    log_mass_host, log_mass_host_err = [], []
-    G_host = []
-    z, z_err = [], []
-
+    # Predefine lists for results
+    results = {'m_B': [], 'mabs_B': [], 'x0': [], 'x1': [], 'c': [],
+               'cov_matrix': [], 'log_mass_host': [], 'log_mass_host_err': [],
+               'G_host': [], 'z': [], 'z_err': [], 'vpec': [], 'vpec_err': []
+               }
     obs_err = []
-    for i in range(data.index[-1]):
-        data_i = data[data.index == i].copy()
+
+    mu_sim = 'SIM_DLMU' in data.columns
+    mu_sim_values = []
+
+    sntype = 'SNTYPE' in data.columns
+    sntype_values = []
+
+    # Predefine the Jacobian matrix function
+    # https://github.com/sncosmo/sncosmo/issues/207#issuecomment-312023684
+    jacobian_matrix = lambda x0: np.array([[-2.5 / (np.log(10) * x0), 0, 0],
+                                           [0, 1, 0],
+                                           [0, 0, 1]])
+
+    # Iterate over unique indices in the data
+    for i in data.index.unique():
+        data_i = data.loc[i]
 
         try:
-            result, fitted_model = lc_fitter(data_i, model=model, plot=False,
-                                             mcmc=mcmc, instrument=instrument,
-                                             dust=dust)
+            result, fitted_model = lc_fitter(data_i, zp=zp, zpsys=zpsys,
+                                             model=model, plot=False, mcmc=mcmc,
+                                             instrument=instrument, dust=dust)
+        except RuntimeError:
+            try:
+                result, fitted_model = lc_fitter(data_i, zp=zp, zpsys=zpsys,
+                                                 model=model, plot=False,
+                                                 mcmc=True,
+                                                 instrument=instrument,
+                                                 dust=dust)
+            
+            except Exception:
+                obs_err.append(i)
+                continue
 
-        except:
-            obs_err.append(i)
+        # Skip the current observation if the covariance matrix is not available
+        if result.covariance is None:
             continue
 
-        m_B.append(fitted_model.source_peakmag(band=band, magsys=zpsys))
+        # Append simulation distance modulus if available   
+        if mu_sim:
+            mu_sim_values.append(data_i['SIM_DLMU'].iloc[0])
+        
+        # Append SNTYPE if available
+        if sntype:
+            sntype_values.append(data_i['SNTYPE'].iloc[0])
 
-        # cosmology dependent
-        mabs_B.append(fitted_model.source_peakabsmag(band, magsys=zpsys))
+        # Extract fitted parameters
+        results['m_B'].append(fitted_model.source_peakmag(band=band, magsys=zpsys))
+        results['mabs_B'].append(fitted_model.source_peakabsmag(band, magsys=zpsys))
+        results['x0'].append(fitted_model['x0'])
+        results['x1'].append(fitted_model['x1'])
+        results['c'].append(fitted_model['c'])
 
-        x0.append(fitted_model['x0'])
-        x0_err.append(result.errors['x0'])
+        # Compute covariance matrix
+        j_matrix = jacobian_matrix(fitted_model['x0'])
+        cov_matrix = j_matrix @ result.covariance @ j_matrix.T  # m_B, x1, c
+        results['cov_matrix'].append(cov_matrix)
 
-        x1.append(fitted_model['x1'])
-        x1_err.append(result.errors['x1'])
+        # Host galaxy properties
+        mass_i = data_i['HOSTGAL_LOGMASS'].iloc[0]
+        results['log_mass_host'].append(mass_i)
+        results['log_mass_host_err'].append(data_i['HOSTGAL_LOGMASS_ERR'].iloc[0])
+        results['G_host'].append(0.5 if mass_i > 10 else -0.5)
 
-        c.append(fitted_model['c'])
-        c_err.append(result.errors['c'])
+        # Redshift and peculiar velocity
+        results['z'].append(data_i['REDSHIFT_FINAL'].iloc[0])
+        results['z_err'].append(data_i['REDSHIFT_FINAL_ERR'].iloc[0])
+        results['vpec'].append(data_i['VPEC'].iloc[0])
+        results['vpec_err'].append(data_i['VPEC_ERR'].iloc[0])
 
-        mass_i = data_i['HOSTGAL_LOGMASS'].values[0]
-        log_mass_host.append(mass_i)
-        log_mass_host_err.append(data_i['HOSTGAL_LOGMASS_ERR'].values[0])
+    # Create summary DataFrame
+    data_summary = pd.DataFrame(results)
 
-        g_host_i = 1/2 if mass_i > 10 else -1/2
-        G_host.append(g_host_i)
-
-        z.append(data_i['REDSHIFT_FINAL'].values[0])
-        z_err.append(data_i['REDSHIFT_FINAL_ERR'].values[0])
-
-    data_summary = pd.DataFrame({'m_B': m_B, 'mabs_B': mabs_B,
-                                 'x0': x0, 'x0_err': x0_err,
-                                 'x1': x1, 'x1_err': x1_err,
-                                 'c': c, 'c_err': c_err,
-                                 'log_mass_host': log_mass_host,
-                                 'log_mass_host_err': log_mass_host_err,
-                                 'G_host': G_host,
-                                 'z': z, 'z_err': z_err})
-
-    # https://github.com/sncosmo/sncosmo/issues/207#issuecomment-312023684
-    m_B_err = np.abs(2.5 / np.log(10) *
-                     data_summary['x0_err'] / data_summary['x0'])
-    data_summary['m_B_err'] = m_B_err
+    # Add simulated distance modulus if available
+    if mu_sim:
+        data_summary['mu_sim'] = mu_sim_values
+    
+    # Add SNTYPE if available
+    if sntype:
+        data_summary['SNTYPE'] = sntype_values
 
     return data_summary, obs_err
-
 
 @njit
 def E(z, omega_m, omega_de, omega_r, w_0, w_a):
@@ -1492,7 +1597,7 @@ def Hubble_param(z, h, omega_m, omega_de, omega_r, w_0, w_a):
     H0 = h * 100  # km/s/Mpc
     return H0 * E(z, omega_m, omega_de, omega_r, w_0, w_a)
 
-
+@njit
 def S_k(omega_k, x):
     """
     Function that calculates the comoving distance as a function of the
@@ -1602,6 +1707,47 @@ def distance_modulus(z, omega_m, omega_de, omega_r=0, w_0=-1, w_a=0, h=None):
 
     return 5 * np.log10(lum_dist) + 25  # luminosity distance in Mpc
 
+# MCMC
+
+def plot_chains(sampler, labels):
+    """
+    Plot the MCMC chains
+    """
+
+    samples = sampler.get_chain()
+    nsteps, nwalkers, ndim = np.shape(samples)
+
+    tau = sampler.get_autocorr_time(tol=0)
+    max_tau = np.nanmax(tau)
+    discard = int(3 * max_tau)
+    
+    fig, ax = plt.subplots(nrows=ndim, ncols=1, figsize=(10, 8), sharex=True)
+
+    if ndim == 1:
+        ax.plot(samples[:, :, 0], 'k', alpha=0.1, linewidth=0.5, ls='-')
+
+        ax.set_ylabel(labels[0])
+        ax.set_xlabel("step number")
+        ax.grid(ls=':', alpha=0.3)
+
+        ax.axvline(discard, color='red', ls='--',
+                   label='discarded \n burn-in')
+
+        ax.legend()
+        
+    else:
+        for i, axis in enumerate(ax):
+            axis.plot(samples[:, :, i], 'k', alpha=0.1, linewidth=0.5, ls='-')
+
+            axis.set_ylabel(labels[i])
+            axis.grid(ls=':', alpha=0.3)
+
+            axis.axvline(discard, color='red', ls='--',
+                         label='discarded \n burn-in')
+
+        axis.set_xlabel("step number")
+        ax[0].legend()
+    return fig, ax
 
 def summarize_mcmc(flat_samples, labels):
     """
@@ -1618,11 +1764,11 @@ def summarize_mcmc(flat_samples, labels):
 
     Output:
     =======
-    Array of computed percentiles for each parameter.
+    Array of computed mean and std for each parameter.
     """
     ndim = flat_samples.shape[1]
     # Compute 25th, 50th, 75th percentiles
-    mcmc = np.percentile(flat_samples, [25, 50, 75], axis=0).T
+    mcmc = np.percentile(flat_samples, [16, 50, 84], axis=0).T
 
     for i in range(ndim):
         difs = np.diff(mcmc[i])
@@ -1630,3 +1776,43 @@ def summarize_mcmc(flat_samples, labels):
         txt = (f"{labels[i]} = "
                f"${mcmc[i, 1]:.3f}_{{-{inf:.3f}}}^{{+{sup:.3f}}}")
         display(Math(txt))
+    
+    dict_output = {label[2:-1]: flat_samples[:, i].mean() for i, label in enumerate(labels)}
+    dict_output.update({f"{label[2:-1]}_err": flat_samples[:, i].std()
+                        for i, label in enumerate(labels)})
+
+    return dict_output
+
+def plot_corner(sampler, labels, discard=None, thin=None, truths=None, pretty=False):
+    """
+    Generate a corner plot for the posterior distribution
+    """
+
+    tau = sampler.get_autocorr_time(tol=0)
+    max_tau = np.nanmax(tau)
+
+    discard_tau = int(3 * max_tau) if not np.isnan(max_tau) else 0
+    discard = discard if discard is not None else discard_tau
+
+    thin_tau = int(max_tau / 2) if not np.isnan(max_tau) else 1
+    thin = thin if thin is not None else thin_tau
+
+    flat_samples = sampler.get_chain(discard=discard, thin=thin, flat=True)
+
+    figure = corner.corner(flat_samples, labels=labels,
+                           show_titles=True, title_fmt="0.3f",
+                           levels=(0.393, 0.864, 0.989),  # 1, 2, 3 sigma
+                           title_quantiles=(0.16, 0.50, 0.84),
+                           truths=truths, smooth=1)
+    plt.show()
+
+    if pretty:
+        samples = MCSamples(samples=flat_samples, names=labels)
+        samples.updateSettings({'contours': [0.393, 0.864, 0.989]})
+
+        plot = plots.get_subplot_plotter()
+        plot.settings.num_plot_contours = 3
+        plot.triangle_plot(samples, filled=True, truth_vals=truths)
+        plt.show()
+    
+    return summarize_mcmc(flat_samples, labels)
